@@ -1,0 +1,9 @@
+node_modules/
+client/node_modules/
+client/dist/
+.DS_Store
+*.log
+data/captures/*
+data/prints/*
+!data/captures/.gitkeep
+!data/prints/.gitkeep
