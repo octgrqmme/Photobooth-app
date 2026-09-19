@@ -1,31 +1,21 @@
 {
   "name": "photobooth-app",
-  "version": "1.0.0",
-  "description": "Fullstack Photobooth Application with Camera & Printer Integration",
+  "version": "9.0.0",
+  "description": "Official Photobooth-App from photobooth-app.org with Camera and Printer Setup",
   "main": "server/server.js",
   "type": "module",
   "scripts": {
-    "start": "node server/server.js",
-    "dev:server": "node server/server.js",
-    "dev:client": "npm --prefix client run dev",
-    "dev": "concurrently -n \"SERVER,CLIENT\" -c \"cyan,magenta\" \"node server/server.js\" \"npm --prefix client run dev\"",
-    "build": "npm --prefix client run build"
+    "start": "./venv/bin/photobooth",
+    "photobooth": "./venv/bin/photobooth",
+    "dev": "./venv/bin/photobooth"
   },
   "keywords": [
+    "photobooth-app",
     "photobooth",
     "camera",
     "printer",
-    "cups",
-    "diy-photobooth"
+    "cups"
   ],
-  "author": "",
-  "license": "MIT",
-  "dependencies": {
-    "concurrently": "^9.1.2",
-    "cors": "^2.8.5",
-    "dotenv": "^17.3.1",
-    "express": "^5.2.1",
-    "multer": "^2.1.1",
-    "qrcode": "^1.5.4"
-  }
+  "author": "photobooth-app.org",
+  "license": "MIT"
 }
