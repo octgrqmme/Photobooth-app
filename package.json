@@ -5,9 +5,9 @@
   "main": "server/server.js",
   "type": "module",
   "scripts": {
-    "start": "./venv/bin/photobooth",
-    "photobooth": "./venv/bin/photobooth",
-    "dev": "./venv/bin/photobooth"
+    "start": "./run.sh",
+    "photobooth": "./run.sh",
+    "dev": "./run.sh"
   },
   "keywords": [
     "photobooth-app",
