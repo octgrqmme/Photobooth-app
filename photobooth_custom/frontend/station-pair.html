@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>จับคู่จุดบริการ · Photobooth</title>
+  <link rel="stylesheet" href="/assets/photobooth-theme.css?v=loy-offline-25691124">
+  <script src="/assets/photobooth-stations.js?v=stations-1" defer></script>
+  <style>
+    body { margin: 0; background: var(--pb-light-bg); color: var(--pb-light-ink); font-family: var(--pb-font-sans); }
+    main { max-width: 820px; margin: auto; padding: 24px 16px; }
+    h1 { margin: 18px 0 6px; }
+    .desks { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,290px),1fr)); gap: 14px; }
+    section { padding: 20px; border-radius: 18px; background: var(--pb-light-card); border: 1px solid var(--pb-light-border); }
+    section h2 { margin: 0 0 8px; }
+    img { display: block; width: min(100%,240px); height: auto; margin: 12px auto; }
+    [hidden] { display: none !important; }
+    button, a { min-height: 44px; }
+    p { line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <main>
+    <a class="pb-pill-action" href="/?view=operator#/">กลับจอควบคุม</a>
+    <h1>จับคู่จุดบริการ</h1>
+    <p>เชื่อมต่อสาย LAN / USB-C (Thunderbolt) หรือ Wi-Fi วงเดียวกันกับ Mac แล้วสแกน QR หรือเปิดลิงก์ด้านล่าง (ใช้ได้ครั้งเดียวภายใน 5 นาที)</p>
+    <div class="desks">
+      <section data-role="tickets">
+        <h2>จุดออกตั๋ว</h2><p>ออกเลขคิวและบันทึกบัตรให้ผู้เข้าถ่าย</p>
+        <button type="button" class="pb-pill-action is-gold" data-invite>สร้าง QR</button>
+        <button type="button" class="pb-pill-action" data-revoke>ตัดการเชื่อมต่อ</button>
+        <img hidden alt="QR สำหรับจับคู่จุดออกตั๋ว">
+        <a hidden data-link>เปิดลิงก์จับคู่</a><p role="status"></p>
+      </section>
+      <section data-role="print">
+        <h2>โต๊ะพิมพ์</h2><p>ดูภาพใหม่และส่งงานไปยังเครื่องพิมพ์ของ Mac</p>
+        <button type="button" class="pb-pill-action is-gold" data-invite>สร้าง QR</button>
+        <button type="button" class="pb-pill-action" data-revoke>ตัดการเชื่อมต่อ</button>
+        <img hidden alt="QR สำหรับจับคู่โต๊ะพิมพ์">
+        <a hidden data-link>เปิดลิงก์จับคู่</a><p role="status"></p>
+      </section>
+    </div>
+  </main>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      document.querySelectorAll("[data-role]").forEach(function (panel) {
+        var status = panel.querySelector("[role=status]");
+        var img = panel.querySelector("img");
+        var link = panel.querySelector("[data-link]");
+        var buttons = Array.from(panel.querySelectorAll("button"));
+        async function update(action) {
+          buttons.forEach(function (button) { button.disabled = true; });
+          try {
+            var result = await pbStations.request("/stations/" + panel.dataset.role + "/" + action, { method: "POST" });
+            img.hidden = link.hidden = action !== "invite";
+            if (action === "invite") {
+              img.src = result.qr;
+              link.href = result.url;
+              link.textContent = "เปิดลิงก์จับคู่ (" + result.url + ")";
+              status.textContent = "QR ใช้ได้ 5 นาที";
+            } else {
+              img.removeAttribute("src");
+              link.removeAttribute("href");
+              status.textContent = "ตัดการเชื่อมต่อแล้ว";
+            }
+          } catch (error) {
+            status.textContent = error.message;
+          } finally {
+            buttons.forEach(function (button) { button.disabled = false; });
+          }
+        }
+        panel.querySelector("[data-invite]").onclick = function () { update("invite"); };
+        panel.querySelector("[data-revoke]").onclick = function () {
+          if (confirm("ตัดการเชื่อมต่อจุดนี้ใช่ไหม?")) update("revoke");
+        };
+      });
+    });
+  </script>
+</body>
+</html>

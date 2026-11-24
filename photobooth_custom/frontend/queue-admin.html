@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>จัดการคิวและสถิติ</title>
+<link rel="stylesheet" href="/assets/photobooth-theme.css?v=standalone-queue-25691124">
+<script src="/assets/photobooth-loykrathong-scene.js?v=lk-scene-1" defer></script>
+<style>
+*{box-sizing:border-box}
+body{font:15px var(--pb-font-sans);background:radial-gradient(circle at 12% 0%,rgba(251,191,36,.14),transparent 42%),var(--pb-light-bg);color:var(--pb-light-ink);margin:0;padding:0 0 44px;min-height:100vh}
+main{max-width:1100px;margin:20px auto 0;padding:0 24px}
+section{background:var(--pb-glass-light);backdrop-filter:blur(22px) saturate(155%);border:1px solid var(--pb-light-border);border-radius:24px;padding:22px 24px;margin:18px 0;box-shadow:var(--pb-light-shadow);animation:uiCard .26s var(--pb-ease-out) both}
+h2{margin:0 0 6px;font-size:19px;font-weight:800;color:var(--pb-light-ink);display:flex;align-items:center;gap:8px}
+section>p{color:var(--pb-light-muted);margin:4px 0 16px}
+input,button{font-family:inherit;font-size:14px;min-height:42px;padding:9px 14px;border-radius:12px}
+input{background:#fffdf9;color:var(--pb-light-ink);border:1px solid rgba(120,53,15,.22);margin:0 6px 8px 0}
+input:focus{outline:none;border-color:#b45309;box-shadow:0 0 0 2px rgba(217,119,6,.2)}
+button{cursor:pointer;background:var(--pb-gold-grad);border:1px solid rgba(217,119,6,.38);color:var(--pb-light-ink);font-weight:800;box-shadow:var(--pb-gold-glow);transition:transform .14s var(--pb-ease-out),background .16s ease}
+button:hover{background:var(--pb-gold-grad-hover)}
+button.danger{background:var(--pb-rose-soft);color:var(--pb-rose-ink);border-color:var(--pb-rose-border);box-shadow:none}
+button.danger:hover{background:var(--pb-rose);color:#fff;border-color:var(--pb-rose)}
+.round-card{margin:14px 0 20px;padding:18px;border:1px solid var(--pb-light-border-ink);border-radius:20px;background:#fffdf9;box-shadow:0 4px 14px rgba(35,25,18,.05)}
+.round-card h3{margin:0 0 14px;font-weight:800;color:var(--pb-light-ink)}
+.metric-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:16px}
+.metric{padding:14px 16px;border-radius:18px;background:var(--pb-espresso);color:var(--pb-dark-ink)}
+.metric:nth-child(2){background:var(--pb-light-sand);color:var(--pb-light-ink);border:1px solid var(--pb-light-border)}
+.metric:nth-child(2) span{color:var(--pb-light-muted)}
+.metric:nth-child(3){background:var(--pb-emerald-soft);color:var(--pb-emerald-ink);border:1px solid var(--pb-emerald-border)}
+.metric:nth-child(3) span{color:var(--pb-emerald-ink)}
+.metric span{display:block;font-size:11px;font-weight:700;opacity:.85}
+.metric strong{font-size:30px;line-height:1.2;font-weight:800}
+table{border-collapse:collapse;width:100%;border:1px solid var(--pb-light-border-ink);border-radius:14px;overflow:hidden}
+th,td{text-align:left;border-bottom:1px solid rgba(146,64,14,.12);padding:10px 12px}
+th{font-size:12px;color:var(--pb-light-secondary);background:var(--pb-light-sand);font-weight:700}
+td{font-weight:600;color:var(--pb-light-ink)}
+small{color:var(--pb-light-muted)}
+#categories{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+#categories p{margin:0;padding:7px 14px;background:var(--pb-light-sand);border:1px solid var(--pb-light-border-ink);color:var(--pb-light-ink);border-radius:999px;font-size:12px;font-weight:700}
+#message{min-height:22px;color:#b45309;font-weight:700}
+@media(max-width:620px){main{padding:0 14px}section{padding:18px}.metric-row{grid-template-columns:1fr 1fr}.metric:last-child{grid-column:1/-1}table{font-size:12px}}
+</style></head>
+<body data-lk-scene="parchment-river">
+<header class="pb-admin-header"><div class="pb-admin-header-inner"><div class="pb-admin-header-top"><div class="pb-admin-title-group"><a class="pb-pill-action" href="/?view=operator#/"><svg class="pb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg> กลับหน้าควบคุม</a><div class="pb-admin-title-text"><h1>จัดการคิวและสถิติผู้มาใช้</h1><p>สโมสรนักศึกษาคณะวิทยาศาสตร์ มหาวิทยาลัยสงขลานครินทร์ · ประเภทคิว รอบงาน และรายงานสรุป</p></div></div><nav class="pb-admin-action-bar"><a href="/control-center.html" class="pb-pill-action">ศูนย์ควบคุม</a><a href="/print-desk.html" class="pb-pill-action">โต๊ะพิมพ์ภาพ</a><a href="/queue-board.html" target="_blank" rel="noopener" class="pb-pill-action">จอคิว ↗</a><a href="/queue-admin.html" class="pb-pill-action is-active">จัดการคิว</a></nav></div></div></header>
+<main><p id="message" role="status"></p>
+<section><h2><svg class="pb-icon" style="color:#b45309;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z"/><path d="M7 7h.01"/></svg> ประเภทคิว</h2><p>ใช้รหัสภาษาอังกฤษ 2–8 ตัว เช่น SCI หรือ SMO</p><input id="prefix" maxlength="8" placeholder="SMO" aria-label="รหัสคิว"><input id="category-name" maxlength="50" placeholder="ผู้นำกิจกรรม" aria-label="ชื่อประเภท"><button id="add-category">เพิ่มประเภท</button><div id="categories"></div></section>
+<section><h2><svg class="pb-icon" style="color:#be123c;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg> รอบงาน</h2><div class="pb-callout-cream" style="margin:10px 0 14px;">เปิดรอบใหม่แล้วเลขแต่ละประเภทจะเริ่ม 01 ประวัติและสถิติเก่ายังอยู่ ต้องไม่มีคิวรอเรียกหรือคิวที่กำลังเรียกค้างอยู่</div><input id="round-name" maxlength="80" placeholder="เช่น งานวันที่ 27 ก.ย. รอบบ่าย" aria-label="ชื่อรอบใหม่"><button id="reset" class="danger">เปิดรอบใหม่</button></section>
+<section><h2><svg class="pb-icon" style="color:#047857;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg> สรุปผู้มาใช้</h2><p><small>นับ “ผู้มาใช้” จากจำนวนคนที่กรอกเมื่อออกคิว เฉพาะคิวที่กดเสร็จสิ้นแล้ว (รวมสถิติคิวเดิมที่มีภาพ); คิวที่ยกเลิกไม่นับ</small></p><div id="rounds"></div></section></main>
+<script>
+async function call(path, method, data){var controller=new AbortController();var timer=setTimeout(function(){controller.abort()},10000);try{var res=await fetch('/api/share/'+path,{method:method||'GET',headers:data?{'Content-Type':'application/json'}:{},body:data?JSON.stringify(data):undefined,cache:'no-store',signal:controller.signal});var body=await res.json().catch(function(){return{}});if(!res.ok)throw Error(body.detail||'ทำรายการไม่สำเร็จ');return body}finally{clearTimeout(timer)}}
+function el(tag,text){var node=document.createElement(tag);node.textContent=text;return node}
+async function refresh(){try{var report=await call('guest-queue/report');var cats=document.getElementById('categories');cats.replaceChildren();report.categories.forEach(function(c){cats.appendChild(el('p',c.prefix+' · '+c.name))});var rounds=document.getElementById('rounds');rounds.replaceChildren();report.rounds.forEach(function(round){var box=el('div','');box.className='round-card';box.appendChild(el('h3',round.name+(round.current?' · รอบปัจจุบัน':'')));var metrics=el('div','');metrics.className='metric-row';[['ออกคิว',round.summary.issued_queues],['คิวเสร็จสิ้น',round.summary.completed_queues],['ผู้มาใช้',round.summary.people_served+' คน']].forEach(function(pair){var card=el('div','');card.className='metric';card.appendChild(el('span',pair[0]));card.appendChild(el('strong',String(pair[1])));metrics.appendChild(card)});box.appendChild(metrics);var table=document.createElement('table');var head=document.createElement('tr');['ประเภท','ออกคิว','ยกเลิก','คิวเสร็จสิ้น','จำนวนคน'].forEach(function(x){head.appendChild(el('th',x))});table.appendChild(head);round.summary.groups.forEach(function(g){var row=document.createElement('tr');[g.prefix+' · '+g.name,g.issued_queues,g.canceled_queues,g.completed_queues,g.people_served].forEach(function(x){row.appendChild(el('td',String(x)))});table.appendChild(row)});box.appendChild(table);rounds.appendChild(box)})}catch(e){document.getElementById('message').textContent=e.message}}
+document.getElementById('add-category').onclick=async function(){var btn=this;if(btn.disabled)return;btn.disabled=true;try{await call('guest-queue/categories','POST',{prefix:document.getElementById('prefix').value.trim().toUpperCase(),name:document.getElementById('category-name').value.trim()});document.getElementById('prefix').value='';document.getElementById('category-name').value='';document.getElementById('message').textContent='เพิ่มประเภทแล้ว';refresh()}catch(e){document.getElementById('message').textContent=e.message}finally{btn.disabled=false}};
+document.getElementById('reset').onclick=async function(){var btn=this;if(btn.disabled)return;var name=document.getElementById('round-name').value.trim();if(!name){document.getElementById('message').textContent='กรุณาตั้งชื่อรอบใหม่ก่อนเปิดรอบ';return}var confirmation=prompt('พิมพ์ชื่อรอบใหม่เพื่อยืนยันการเริ่มเลขคิว 01: '+name);if(confirmation!==name)return;btn.disabled=true;try{await call('guest-queue/reset','POST',{name:name});document.getElementById('round-name').value='';document.getElementById('message').textContent='เปิดรอบใหม่แล้ว';refresh()}catch(e){document.getElementById('message').textContent=e.message}finally{btn.disabled=false}};
+refresh();
+</script></body></html>

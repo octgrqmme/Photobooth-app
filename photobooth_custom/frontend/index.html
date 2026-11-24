@@ -1,0 +1,2912 @@
+<!doctype html><html lang="th"><head><title>Photobooth-App</title><meta charset=utf-8><meta name=description content="photobooth-app frontend"><meta name=format-detection content="telephone=no"><meta name=msapplication-tap-highlight content=no><meta name=viewport content="user-scalable=no,initial-scale=1,maximum-scale=1,minimum-scale=1,width=device-width"><meta name=mobile-web-app-capable content=yes><meta name=apple-mobile-web-app-capable content=yes><link rel=icon type=image/png sizes=128x128 href=/icons/favicon-128x128.png><script>document.documentElement.dataset.pbView = new URLSearchParams(location.search).get("view") === "operator" ? "operator" : "guest";</script><script>
+      var _jipt = []
+      _jipt.push(['project', 'photobooth-app'])</script>
+  <!-- The custom guest and operator screens use their own API-driven controls.
+       Loading the hidden legacy Vue app would show its connection dialog over
+       the operator gallery whenever the camera/SSE service is unavailable. -->
+  <link rel="stylesheet" crossorigin href="/assets/index-CNXN7YnO.css">
+  <style>
+  /* =========================================================
+     PHOTOBOOTH PURE WHITE MINIMALIST STUDIO THEME
+     - All buttons, panels, toasts: PURE WHITE (#ffffff)
+     - Distinct highlight borders for state/intent
+     - NO neon glowing effects
+     - Smooth micro-interactions & entrance animations
+     - Native MJPEG stream engine support
+     ========================================================= */
+
+  /* Ensure background allows live camera stream to show through */
+  body, .q-layout, .q-page-container, .q-page {
+    background: transparent !important;
+  }
+  #q-app {
+    position: relative !important;
+    z-index: 5 !important;
+    background: transparent !important;
+  }
+  #itemapproval-dialog {
+    display: none !important;
+  }
+
+  /* Hide app default back/abort/admin/toolbar buttons */
+  #layout-button-back,
+  .action-button-abort,
+  .q-header,
+  #frontpage-button-to-gallery,
+  #frontpage-button-to-admin,
+  #gallery-toolbar,
+  .gallery-toolbar,
+  .toolbar,
+  .action-buttons,
+  .action-button,
+  .action-button-download,
+  .action-button-delete,
+  .action-button-share,
+  .action-button-filter {
+    display: none !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    width: 0 !important;
+    overflow: hidden !important;
+  }
+
+  /* Hide old buggy canvas-stream engine */
+  .canvas-stack, #canvas-stream, #canvas-blurred {
+    display: none !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+
+  /* New Native MJPEG Camera Engine */
+  #pb-camera-engine-container {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #ffffff;
+    z-index: 0 !important;
+    pointer-events: none;
+    overflow: hidden;
+  }
+  #pb-camera-stream {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-select: none;
+    transition: opacity 0.35s ease;
+  }
+
+  /* Universal Button Styling: ALWAYS WHITE BACKGROUND, Uniform Size, Smooth Animation */
+  .pb-btn {
+    height: 46px;
+    min-width: 140px;
+    background: #ffffff !important;
+    border-radius: 10px;
+    padding: 0 20px;
+    font-size: 15px;
+    font-weight: 600;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    user-select: none;
+    -webkit-user-select: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    outline: none;
+  }
+  .pb-btn:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+  }
+  .pb-btn:active {
+    transform: translateY(0) scale(0.98);
+  }
+  .pb-btn svg {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    transition: transform 0.25s ease;
+  }
+  .pb-btn:hover svg {
+    transform: scale(1.1);
+  }
+
+  /* Button Border Highlight Styles (Background stays PURE WHITE) */
+  .pb-btn-print {
+    border: 2px solid #0f172a !important;
+    color: #0f172a !important;
+  }
+  .pb-btn-print:hover {
+    border-color: #000000 !important;
+    background: #fafafa !important;
+  }
+
+  /* Print Control with Quantity Stepper (Pure White Studio Theme) */
+  .pb-print-control {
+    display: inline-flex;
+    align-items: center;
+    background: #ffffff !important;
+    border: 2px solid #0f172a;
+    border-radius: 10px;
+    height: 46px;
+    box-sizing: border-box;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+  }
+  .pb-print-control:hover {
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+  }
+  .pb-qty-stepper {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0 8px;
+    height: 100%;
+    border-right: 1.5px solid #e2e8f0;
+    background: #ffffff;
+  }
+  .pb-qty-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: 7px;
+    background: #ffffff !important;
+    border: 1.5px solid #e2e8f0;
+    color: #0f172a !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    padding: 0 !important;
+    outline: none !important;
+  }
+  .pb-qty-btn:hover {
+    border-color: #0f172a;
+    background: #f8fafc !important;
+    transform: scale(1.08);
+  }
+  .pb-qty-btn:active {
+    transform: scale(0.95);
+  }
+  .pb-qty-btn svg {
+    width: 14px;
+    height: 14px;
+    stroke: #0f172a;
+    stroke-width: 2.5;
+  }
+  .pb-qty-val {
+    min-width: 24px;
+    text-align: center;
+    font-size: 15px;
+    font-weight: 700;
+    color: #0f172a;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .pb-print-submit {
+    border: none !important;
+    border-radius: 0 !important;
+    height: 100% !important;
+    padding: 0 16px !important;
+    min-width: 130px !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+    box-shadow: none !important;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+    outline: none;
+    transition: background 0.15s ease;
+  }
+  .pb-print-submit:hover {
+    background: #f8fafc !important;
+  }
+  .pb-print-submit svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .pb-btn-queue {
+    border: 2px solid #64748b !important;
+    color: #0f172a !important;
+  }
+  .pb-btn-queue:hover {
+    border-color: #0f172a !important;
+    background: #fafafa !important;
+  }
+
+  /* Top-Right Print Queue Floating Widget (Pure White, Smooth Interaction) */
+  .pb-print-queue-btn {
+    position: fixed;
+    top: 20px;
+    right: 24px;
+    z-index: 99990;
+    background: #ffffff !important;
+    border: 2px solid #e2e8f0;
+    border-radius: 30px;
+    padding: 8px 18px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #0f172a;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+    animation: pbSlideDown 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: all 0.25s ease;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .pb-print-queue-btn:hover {
+    transform: translateY(-2px);
+    border-color: #0f172a;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+  }
+  .pb-print-queue-btn:active {
+    transform: translateY(0) scale(0.98);
+  }
+  .pb-print-queue-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #0f172a;
+  }
+  .pb-print-queue-icon svg {
+    width: 20px;
+    height: 20px;
+  }
+  .pb-print-queue-badge {
+    background: #ffffff;
+    border: 1.5px solid #e2e8f0;
+    color: #475569;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 12px;
+    min-width: 20px;
+    text-align: center;
+    transition: all 0.2s ease;
+  }
+  .pb-print-queue-btn.is-printing {
+    border-color: #16a34a !important;
+  }
+  .pb-print-queue-btn.is-printing .pb-print-queue-badge {
+    background: #f0fdf4;
+    border-color: #16a34a;
+    color: #16a34a;
+    animation: pbPulse 1.5s infinite ease-in-out;
+  }
+
+  .pb-btn-airdrop {
+    border: 2px solid #0284c7 !important;
+    color: #0284c7 !important;
+  }
+  .pb-btn-airdrop:hover {
+    border-color: #0369a1 !important;
+    background: #f0f9ff !important;
+  }
+
+  .pb-btn-newshoot {
+    border: 2px solid #64748b !important;
+    color: #0f172a !important;
+  }
+  .pb-btn-newshoot:hover {
+    border-color: #0f172a !important;
+    background: #fafafa !important;
+  }
+
+  .pb-btn-gallery {
+    border: 2px solid #e2e8f0 !important;
+    color: #0f172a !important;
+  }
+  .pb-btn-gallery:hover {
+    border-color: #cbd5e1 !important;
+    background: #fafafa !important;
+  }
+
+  .pb-btn-keep {
+    border: 2px solid #16a34a !important;
+    color: #16a34a !important;
+  }
+  .pb-btn-keep:hover {
+    border-color: #15803d !important;
+    background: #f0fdf4 !important;
+  }
+
+  .pb-btn-retake {
+    border: 2px solid #dc2626 !important;
+    color: #dc2626 !important;
+  }
+  .pb-btn-retake:hover {
+    border-color: #b91c1c !important;
+    background: #fef2f2 !important;
+  }
+
+  .pb-btn-delete {
+    border: 2px solid #dc2626 !important;
+    color: #dc2626 !important;
+  }
+  .pb-btn-delete:hover {
+    border-color: #b91c1c !important;
+    background: #fef2f2 !important;
+  }
+
+  /* Left-side Gallery Button (Pure White, Smooth Animation) */
+  .pb-gallery-btn {
+    position: fixed;
+    left: 24px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 96px;
+    background: #ffffff !important;
+    border: 2px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 16px 10px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    user-select: none;
+    -webkit-user-select: none;
+    color: #0f172a;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+  }
+  .pb-gallery-btn:hover {
+    transform: translateY(-50%) scale(1.05);
+    border-color: #0f172a;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+  }
+  .pb-gallery-btn:active {
+    transform: translateY(-50%) scale(0.98);
+  }
+  .pb-gallery-btn-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #0f172a;
+    transition: transform 0.25s ease;
+  }
+  .pb-gallery-btn:hover .pb-gallery-btn-icon {
+    transform: scale(1.1);
+  }
+  .pb-gallery-btn-icon svg {
+    width: 28px;
+    height: 28px;
+  }
+  .pb-gallery-btn-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #0f172a;
+  }
+  .pb-gallery-btn-badge {
+    background: #ffffff;
+    border: 1.5px solid #e2e8f0;
+    color: #475569;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 12px;
+    white-space: nowrap;
+    transition: border-color 0.2s ease;
+  }
+  .pb-gallery-btn:hover .pb-gallery-btn-badge {
+    border-color: #cbd5e1;
+    color: #0f172a;
+  }
+
+  /* Right-side Studio Sidebar (Pure White, Smooth Slot Animations) */
+  .pb-sidebar {
+    position: fixed;
+    right: 24px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 210px;
+    background: #ffffff !important;
+    border: 2px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 16px 14px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+    color: #0f172a;
+    user-select: none;
+    -webkit-user-select: none;
+    transition: box-shadow 0.3s ease;
+  }
+  .pb-header {
+    text-align: center;
+    border-bottom: 1px solid #f1f5f9;
+    padding-bottom: 10px;
+  }
+  .pb-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 6px;
+  }
+  .pb-badge {
+    display: inline-block;
+    background: #ffffff;
+    color: #0f172a;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1.5px solid #e2e8f0;
+    transition: all 0.2s ease;
+  }
+  .pb-badge.completed {
+    border-color: #16a34a;
+    color: #16a34a;
+  }
+  .pb-sub {
+    font-size: 12px;
+    color: #64748b;
+    margin-top: 4px;
+    font-weight: 500;
+  }
+  .pb-slots {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .pb-slot {
+    background: #ffffff !important;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 8px;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .pb-slot:hover {
+    transform: translateX(-3px);
+    border-color: #cbd5e1;
+    background: #fafafa !important;
+  }
+  .pb-slot.active {
+    border-color: #0f172a !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
+  .pb-slot.has-photo {
+    border-color: #cbd5e1;
+  }
+  .pb-slot-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    margin-bottom: 6px;
+  }
+  .pb-slot-label {
+    font-weight: 700;
+    color: #0f172a;
+  }
+  .pb-slot-tag {
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 6px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    color: #64748b;
+    font-weight: 600;
+  }
+  .pb-slot-tag.ready {
+    border-color: #16a34a;
+    color: #16a34a;
+    font-weight: 700;
+  }
+  .pb-slot-tag.waiting {
+    border-color: #0f172a;
+    color: #0f172a;
+    font-weight: 700;
+  }
+  .pb-slot-thumb {
+    width: 100%;
+    height: 85px;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #f8fafc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #f1f5f9;
+  }
+  .pb-slot-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+  }
+  .pb-slot:hover .pb-slot-thumb img {
+    transform: scale(1.04);
+  }
+  .pb-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #94a3b8;
+  }
+  .pb-icon svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  /* Top Instruction Banner (Pure White, Slide-Down Animation) */
+  @keyframes pbSlideDown {
+    from { opacity: 0; transform: translate(-50%, -20px); }
+    to { opacity: 1; transform: translate(-50%, 0); }
+  }
+  .pb-top-banner {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 99990;
+    background: #ffffff !important;
+    border: 2px solid #e2e8f0;
+    border-radius: 30px;
+    padding: 10px 24px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #0f172a;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    pointer-events: none;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+    animation: pbSlideDown 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: border-color 0.3s ease, color 0.3s ease;
+  }
+  .pb-top-banner svg {
+    width: 18px;
+    height: 18px;
+    color: inherit;
+    flex-shrink: 0;
+  }
+  .pb-top-banner.banner-approval {
+    border-color: #0284c7;
+    color: #0284c7;
+  }
+  .pb-top-banner.banner-success {
+    border-color: #16a34a;
+    color: #16a34a;
+  }
+
+  /* Finished Screen Action Bar (Pure White, Slide-Up Animation) */
+  @keyframes pbSlideUp {
+    from { opacity: 0; transform: translate(-50%, 20px); }
+    to { opacity: 1; transform: translate(-50%, 0); }
+  }
+  .pb-finished-bar {
+    position: fixed;
+    bottom: 32px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #ffffff !important;
+    border: 2px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 12px 18px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+    z-index: 99995;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    animation: pbSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .pb-finished-bar.pb-hidden {
+    display: none !important;
+  }
+
+  /* Modal System (Pure White, Scale-Fade Animation) */
+  @keyframes pbModalFadeIn {
+    from { opacity: 0; transform: scale(0.95) translateY(10px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  .pb-modal {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999999;
+  }
+  .pb-modal.pb-hidden {
+    display: none !important;
+  }
+  .pb-modal-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition: opacity 0.3s ease;
+  }
+  .pb-modal-box {
+    position: relative;
+    width: 85vw;
+    max-width: 820px;
+    background: #ffffff !important;
+    border: 2px solid #e2e8f0;
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    animation: pbModalFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+  }
+  .pb-gallery-box {
+    position: relative;
+    width: 90vw;
+    max-width: 960px;
+    max-height: 88vh;
+    overflow: hidden;
+    background: #ffffff !important;
+    border: 2px solid #e2e8f0;
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    animation: pbModalFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+  }
+  .pb-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #f1f5f9;
+    padding-bottom: 12px;
+  }
+  .pb-modal-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .pb-modal-close {
+    background: #ffffff !important;
+    border: 1.5px solid #e2e8f0;
+    color: #0f172a !important;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    padding: 0 !important;
+    outline: none !important;
+  }
+  .pb-modal-close:hover {
+    border-color: #0f172a;
+    color: #000000 !important;
+    transform: scale(1.06);
+    background: #f8fafc !important;
+  }
+  .pb-modal-close svg {
+    width: 18px !important;
+    height: 18px !important;
+    display: block !important;
+    stroke: #0f172a !important;
+    stroke-width: 2.5 !important;
+    stroke-linecap: round !important;
+    stroke-linejoin: round !important;
+    pointer-events: none !important;
+    flex-shrink: 0 !important;
+    transition: transform 0.2s ease;
+  }
+  .pb-modal-close:hover svg {
+    stroke: #000000 !important;
+    transform: scale(1.1);
+  }
+  .pb-modal-body {
+    width: 100%;
+    height: 56vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f8fafc;
+    border-radius: 12px;
+    border: 1.5px solid #e2e8f0;
+    overflow: hidden;
+    padding: 10px;
+  }
+  .pb-modal-body img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  }
+  .pb-modal-actions {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    padding-top: 8px;
+  }
+  .pb-gallery-tabs {
+    display: flex;
+    gap: 6px;
+    background: #f8fafc;
+    padding: 3px;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+  }
+  .pb-gallery-tab {
+    background: transparent;
+    border: none;
+    padding: 5px 14px;
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .pb-gallery-tab:hover {
+    color: #0f172a;
+  }
+  .pb-gallery-tab.active {
+    background: #ffffff;
+    color: #0f172a;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+    border: 1px solid #e2e8f0;
+  }
+  .pb-gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    grid-auto-rows: 320px;
+    gap: 16px;
+    overflow-y: auto;
+    min-height: 0;
+    flex: 1 1 auto;
+    padding: 8px 4px;
+    box-sizing: border-box;
+  }
+  #pb-gallery-folders { max-height: 12vh; overflow-y: auto; flex: none; }
+  #pb-gallery-detail-view { min-height: 0; overflow-y: auto; }
+  .pb-gallery-card {
+    background: #ffffff !important;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 12px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    flex-direction: column;
+    height: 320px !important;
+    min-height: 320px !important;
+    max-height: 320px !important;
+    box-sizing: border-box;
+  }
+  .pb-gallery-card:hover {
+    transform: translateY(-4px);
+    border-color: #0f172a;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  }
+  .pb-gallery-card-thumb {
+    width: 100%;
+    height: 235px !important;
+    min-height: 235px !important;
+    max-height: 235px !important;
+    flex: 0 0 235px !important;
+    background: #f8fafc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border-bottom: 1px solid #f1f5f9;
+    padding: 8px;
+    box-sizing: border-box;
+  }
+  .pb-gallery-card-thumb img {
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    display: block;
+  }
+  .pb-gallery-card:hover .pb-gallery-card-thumb img {
+    transform: scale(1.04);
+  }
+  .pb-gallery-card-info {
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 4px;
+    background: #ffffff;
+    flex: 1 0 auto !important;
+    box-sizing: border-box;
+  }
+  .pb-gallery-card-time {
+    font-size: 12px;
+    color: #64748b;
+    font-weight: 500;
+    line-height: 1.3;
+  }
+  .pb-gallery-card-badge {
+    align-self: flex-start;
+    font-size: 11px;
+    font-weight: 600;
+    color: #0f172a;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    padding: 2px 8px;
+    border-radius: 6px;
+    line-height: 1.4;
+  }
+  .pb-gallery-empty {
+    text-align: center;
+    padding: 48px 20px;
+    color: #64748b;
+    font-size: 15px;
+    grid-column: 1 / -1;
+  }
+
+  /* Toast Notification (PURE WHITE Background, Distinct Border, Slide-Down Animation) */
+  .pb-toast {
+    position: fixed;
+    top: 76px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #ffffff !important;
+    border: 2px solid #0f172a;
+    color: #0f172a;
+    padding: 10px 24px;
+    border-radius: 30px;
+    font-size: 14px;
+    font-weight: 600;
+    z-index: 9999999;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+    pointer-events: none;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    animation: pbSlideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+  }
+  .pb-toast.pb-hidden {
+    display: none !important;
+  }
+  #pb-offline-toggle {
+    padding: 7px 12px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 12px;
+    border: 1px solid rgba(146, 64, 14, 0.24);
+    background: rgba(255, 253, 249, 0.92);
+    color: #231912;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  #pb-offline-toggle.is-offline {
+    background: #f59e0b;
+    color: #231912;
+    border-color: #d97706;
+  }
+  </style>
+  <link rel="stylesheet" href="/assets/photobooth-enhancements.css?v=print-copies-25691124">
+  <link rel="stylesheet" href="/assets/photobooth-dual-screen.css?v=standalone-queue-25691124">
+  <link rel="stylesheet" href="/assets/photobooth-theme.css?v=offline-toggle-25691124">
+  <script src="/assets/photobooth-loykrathong-scene.js?v=loy-board-25691124" defer></script>
+</head><body data-lk-scene="parchment-river">
+
+<header id="pb-workspace-header" aria-label="แผงควบคุมบน Mac">
+  <div class="pb-workspace-brand"><span class="pb-brand-mark" aria-hidden="true">✦</span><div><strong>บูธถ่ายภาพงานลอยกระทง</strong><span>สโมสรนักศึกษาคณะวิทยาศาสตร์ ม.อ. · แผงควบคุม</span></div></div>
+  <details id="pb-operator-status" aria-label="สถานะระบบ">
+    <summary><span id="pb-island-dot" class="pb-island-dot" aria-hidden="true"></span><strong id="pb-island-title">กำลังตรวจสอบระบบ</strong><span class="pb-island-chevron" aria-hidden="true">⌄</span></summary>
+    <div class="pb-island-panel">
+      <div class="pb-status-card pb-status-camera" data-state="checking"><span class="pb-status-icon">●</span><span><small>กล้อง Canon</small><strong id="pb-status-camera">กำลังตรวจสอบ</strong></span></div>
+      <div class="pb-status-card pb-status-active"><span class="pb-status-icon">◈</span><span><small>กำลังเรียก</small><strong id="pb-status-active">—</strong></span></div>
+      <div class="pb-status-card pb-status-waiting"><span class="pb-status-icon">◎</span><span><small>รอเรียก</small><strong id="pb-status-waiting">0 คิว</strong></span></div>
+      <div class="pb-status-card pb-status-print"><span class="pb-status-icon">▤</span><span><small>คิวพิมพ์</small><strong id="pb-status-print">0 งาน</strong></span></div>
+      <div class="pb-status-sync"><span class="pb-sync-dot"></span><strong id="pb-status-sync">กำลังเชื่อมต่อ</strong><small>คิวทุก 2 วิ · ภาพทุก 3 วิ · พิมพ์ทุก 5 วิ</small></div>
+    </div>
+  </details>
+  <nav class="pb-workspace-actions" aria-label="หน้าจอและเครื่องมือ">
+    <details id="pb-screen-menu"><summary>หน้าจอ <span aria-hidden="true">⌄</span></summary><div class="pb-screen-menu-panel"><a href="/station-pair.html" target="_blank" rel="noopener">จับคู่จุดบริการ ↗</a><a href="/?view=guest#/" target="_blank" rel="noopener">จอถ่าย ↗</a><a href="/control-center.html" target="_blank" rel="noopener">ศูนย์ควบคุม ↗</a><a href="/kiosk.html" target="_blank" rel="noopener">ตู้ถ่ายเอง (Kiosk) ↗</a><a href="/queue-board.html" target="_blank" rel="noopener">จอคิว ↗</a><a href="/print-desk.html" target="_blank" rel="noopener">โต๊ะพิมพ์ ↗</a><a href="/ticket-desk.html" target="_blank" rel="noopener">จุดออกตั๋ว ↗</a><a href="/template-chooser.html" target="_blank" rel="noopener">เลือกเทมเพลต ↗</a><a href="/queue-admin.html" target="_blank" rel="noopener">จัดการคิว ↗</a></div></details>
+    <details id="pb-print-island" aria-label="สถานะเครื่องพิมพ์และคิวพิมพ์"><summary title="ดูคิวพิมพ์" aria-label="ดูคิวพิมพ์"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 15h12v6H6zM18 12h.01"/></svg><span id="pb-header-print-count">0</span></summary><div class="pb-print-island-panel"><div class="pb-print-island-heading"><strong>สถานะงานพิมพ์</strong><small id="pb-print-island-updated">กำลังโหลด…</small></div><div class="pb-print-island-section"><span>กำลังดำเนินการ</span><div id="pb-print-island-active"></div></div><div class="pb-print-island-section"><span>รอพิมพ์</span><div id="pb-print-island-waiting"></div></div><div class="pb-print-island-section"><span>พิมพ์เสร็จ</span><div id="pb-print-island-done"></div></div><button type="button" id="pb-print-island-manage" onclick="pbOpenPrintQueueModal()">จัดการคิวพิมพ์ ↗</button></div></details>
+    <button type="button" id="pb-offline-toggle" onclick="pbToggleOfflineMode()" title="สลับโหมดออฟไลน์เพื่อทำงานโดยไม่พึ่ง Wi-Fi" aria-pressed="false">ออนไลน์</button>
+    <button type="button" onclick="pbOpenHardware()" aria-label="ตั้งค่าอุปกรณ์" title="ตั้งค่าอุปกรณ์">⚙</button>
+  </nav>
+</header>
+<main id="pb-operator-layout" aria-label="พื้นที่ทำงานแผงควบคุม"><section id="pb-queue-column" aria-label="คิวผู้ถ่าย"></section><section id="pb-studio-column" aria-label="สตูดิโอถ่ายภาพ"></section></main>
+<a id="pb-open-control" href="/?view=operator#/" target="_blank" rel="noopener">เปิดจอควบคุม ↗</a>
+<div id="pb-guest-active-code" aria-live="polite" hidden></div>
+
+<!-- Native MJPEG Camera Engine (Rock-Solid 30fps Stream) -->
+<div id="pb-camera-engine-container">
+  <img id="pb-camera-stream" alt="Camera Preview" />
+</div>
+
+<!-- Blocks all input while Canon is transferring and preparing a review image. -->
+<div id="pb-capture-loading" class="pb-capture-loading pb-hidden" role="status" aria-live="assertive" aria-hidden="true">
+  <div class="pb-capture-loading-card">
+    <div class="pb-capture-spinner" aria-hidden="true"></div>
+    <strong id="pb-capture-loading-title">กำลังเตรียมภาพ...</strong>
+    <span id="pb-capture-loading-text">กรุณารอสักครู่ ระบบล็อกชัตเตอร์ชั่วคราว</span>
+  </div>
+</div>
+
+<div id="q-app"></div>
+
+<!-- Toast Notification (Pure White) -->
+<div id="pb-toast" class="pb-toast pb-hidden">
+  <span id="pb-toast-text">ข้อความ</span>
+</div>
+
+<!-- Left-side Gallery Button (Visible throughout shooting) -->
+<div id="pb-gallery-btn" class="pb-gallery-btn" onclick="pbOpenGallery()" title="เปิดแกลเลอรีภาพถ่าย">
+  <div class="pb-gallery-btn-thumb" id="pb-gallery-btn-thumb" style="display:none; width:44px; height:62px; border-radius:6px; overflow:hidden; border:1.5px solid #0f172a; margin-bottom:2px; box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+    <img id="pb-gallery-btn-img" src="" style="width:100%; height:100%; object-fit:cover;">
+  </div>
+  <div class="pb-gallery-btn-icon" id="pb-gallery-btn-icon">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+  </div>
+  <div class="pb-gallery-btn-title">แกลเลอรี</div>
+  <div id="pb-gallery-count" class="pb-gallery-btn-badge">0 รูป</div>
+</div>
+
+<!-- Top Instruction Banner -->
+<div id="pb-top-banner" class="pb-top-banner">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+  <span id="pb-banner-text">สตูดิโอพร้อมแล้ว — กดปุ่มชัตเตอร์ที่กล้องเพื่อเริ่มถ่ายรูปที่ 1 (1/3)</span>
+</div>
+
+<!-- Top-Right Print Queue Floating Button (Always visible) -->
+<div id="pb-print-queue-btn" class="pb-print-queue-btn" onclick="pbOpenPrintQueueModal()" title="ดูสถานะคิวการพิมพ์">
+  <div class="pb-print-queue-icon">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+  </div>
+  <div class="pb-print-queue-text" id="pb-print-queue-text">คิวการพิมพ์</div>
+  <div id="pb-print-queue-badge" class="pb-print-queue-badge">0</div>
+</div>
+
+<!-- Finished Screen Action Bar (Shown when completed / present) -->
+<div id="pb-finished-bar" class="pb-finished-bar pb-hidden">
+  <div class="pb-print-control">
+    <div class="pb-qty-stepper" title="เลือกจำนวนพิมพ์">
+      <button class="pb-qty-btn" onclick="pbChangeFinishedPrintQty(-1)" title="ลดจำนวน">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+      <span class="pb-qty-val" id="pb-finished-print-qty">1</span>
+      <button class="pb-qty-btn" onclick="pbChangeFinishedPrintQty(1)" title="เพิ่มจำนวน">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+    </div>
+    <button class="pb-print-submit" onclick="pbPrintLatest()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+      พิมพ์ภาพ (<span id="pb-finished-print-qty-label">1</span> ใบ)
+    </button>
+  </div>
+  <button class="pb-btn pb-btn-queue" onclick="pbOpenPrintQueueModal()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+    คิวพิมพ์ <span id="pb-finished-queue-badge" style="display:none; font-size:11px; margin-left:4px; padding:2px 7px; border-radius:10px; background:#ffffff; border:1.5px solid #0f172a; font-weight:700;">0</span>
+  </button>
+  <button class="pb-btn pb-btn-airdrop" onclick="pbShareLatest()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+    แชร์ AirDrop
+  </button>
+  <button class="pb-btn pb-btn-delete" onclick="pbDeleteLatest()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+    ลบภาพนี้
+  </button>
+  <button class="pb-btn pb-btn-newshoot" onclick="pbRestartShooting()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+    ถ่ายชุดใหม่
+  </button>
+  <button class="pb-btn pb-btn-gallery" onclick="pbOpenGallery()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+    แกลเลอรี
+  </button>
+</div>
+
+<!-- Right-side Studio Sidebar Component -->
+<div id="photobooth-sidebar" class="pb-sidebar">
+  <div class="pb-header">
+    <div class="pb-title">สตูดิโอถ่ายภาพ</div>
+    <div id="pb-progress-badge" class="pb-badge">กำลังโหลดจำนวนภาพ…</div>
+    <div id="pb-progress-sub" class="pb-sub">เลือกกรอบก่อนเริ่มถ่าย</div>
+  </div>
+  <section id="pb-guest-queue-panel" aria-label="ระบบเรียกคิว">
+    <div class="pb-gq-heading"><strong>ระบบเรียกคิว (อิสระ)</strong><a href="/queue-admin.html" target="_blank" rel="noopener">จัดการ / สถิติ ↗</a></div>
+    <div class="pb-gq-form"><label for="pb-gq-prefix">ประเภทคิว<select id="pb-gq-prefix" aria-label="ประเภทคิว"><option value="SCI">SCI · นักศึกษา</option></select></label><label for="pb-gq-people">จำนวนคน<input id="pb-gq-people" type="number" min="1" max="999" value="1"></label></div>
+    <button id="pb-gq-create" type="button">＋ ออกบัตรคิว <small id="pb-gq-issue-next">SCI01</small></button>
+    <p class="pb-gq-voice-hint">แยกอิสระจากกล้อง · ถ่ายครบ 3 รูปบันทึกจบได้ทันที · กดเรียก/จบคิวด้วยมือ</p>
+    <div class="pb-gq-status-card"><div class="pb-gq-current">กำลังเรียก <strong id="pb-gq-active">—</strong><button id="pb-gq-active-done" type="button" hidden>✓ เสร็จคิว</button><button id="pb-gq-active-next" type="button" hidden>เสร็จ &amp; เรียกถัดไป ➔</button><button id="pb-gq-active-ticket" type="button" hidden>เปิดตั๋วคิว</button></div><div class="pb-gq-next">คิวรอถัดไป <strong id="pb-gq-next">—</strong><button id="pb-gq-next-start" type="button" hidden>เรียกคิวนี้</button><button id="pb-gq-next-skip" type="button" hidden>ข้ามคิว ↴</button></div></div>
+    <div id="pb-ipad-chooser" class="pb-ipad-chooser"><img src="/api/share/template-chooser-qr.svg" alt="QR เพื่อเปิดหน้าเลือกเทมเพลตบน iPad"><div><strong>เลือกกรอบบน iPad / มือถือ</strong><small>สแกน QR เพื่อสลับกรอบได้ตลอดเวลาเมื่อกล้องว่าง</small><a href="/template-chooser.html" target="_blank" rel="noopener">เปิดหน้าเลือกกรอบ ↗</a></div></div>
+    <div id="pb-gq-list" class="pb-gq-list" aria-live="polite"></div>
+    <div id="pb-gq-message" role="status"></div>
+  </section>
+  <div class="pb-slots">
+    <div class="pb-slot" id="pb-slot-0" onclick="pbViewSlot(0)">
+      <div class="pb-slot-header">
+        <span class="pb-slot-label">รูปที่ 1</span>
+        <span class="pb-slot-tag" id="pb-tag-0">รอถ่าย</span>
+      </div>
+      <div class="pb-slot-thumb" id="pb-thumb-0">
+        <span class="pb-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg></span>
+      </div>
+    </div>
+    <div class="pb-slot" id="pb-slot-1" onclick="pbViewSlot(1)">
+      <div class="pb-slot-header">
+        <span class="pb-slot-label">รูปที่ 2</span>
+        <span class="pb-slot-tag" id="pb-tag-1">รอถ่าย</span>
+      </div>
+      <div class="pb-slot-thumb" id="pb-thumb-1">
+        <span class="pb-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg></span>
+      </div>
+    </div>
+    <div class="pb-slot" id="pb-slot-2" onclick="pbViewSlot(2)">
+      <div class="pb-slot-header">
+        <span class="pb-slot-label">รูปที่ 3</span>
+        <span class="pb-slot-tag" id="pb-tag-2">รอถ่าย</span>
+      </div>
+      <div class="pb-slot-thumb" id="pb-thumb-2">
+        <span class="pb-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg></span>
+      </div>
+    </div>
+  </div>
+  <button class="pb-btn pb-btn-newshoot" style="height:36px; min-width:unset; width:100%; font-size:13px; margin-top:6px; padding:0 12px; gap:6px;" onclick="pbAbortAndRestart()">
+    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+    เริ่มถ่ายใหม่ทั้งหมด
+  </button>
+</div>
+
+<div id="pb-queue-ticket-modal" class="pb-ticket-modal pb-hidden" role="dialog" aria-modal="true" aria-labelledby="pb-queue-ticket-title">
+  <div class="pb-ticket-backdrop" data-pb-ticket-close></div>
+  <div class="pb-ticket-dialog">
+    <div class="pb-ticket-topline"><div><span>BOX OFFICE</span><h2 id="pb-queue-ticket-title">บัตรคิวผู้ถ่าย</h2></div><button id="pb-ticket-close" type="button" aria-label="ปิดบัตรคิว">✕</button></div>
+    <p class="pb-ticket-help">ให้ผู้ใช้ถ่ายภาพตั๋วบนหน้าจอนี้ หรือส่งไฟล์ PNG ผ่าน AirDrop</p>
+    <button id="pb-ticket-expand" type="button">⛶ ขยายตั๋วให้ถ่ายชัด</button>
+    <canvas id="pb-queue-ticket-canvas" width="900" height="1500" role="img" aria-label="บัตรคิว"></canvas>
+    <div class="pb-ticket-actions"><button id="pb-ticket-download" type="button">บันทึก PNG</button><button id="pb-ticket-airdrop" type="button">แชร์ / AirDrop</button></div>
+    <p id="pb-ticket-message" role="status"></p>
+  </div>
+</div>
+
+<!-- Dedicated Live Approval Modal (Shows right after each photo is shot) -->
+<div id="pb-approval-modal" class="pb-modal pb-hidden">
+  <div class="pb-modal-overlay"></div>
+  <div class="pb-modal-box">
+    <div class="pb-modal-header">
+      <h3 id="pb-approval-title">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+        <span id="pb-approval-title-text">ตรวจดูรูปภาพ</span>
+      </h3>
+      <button class="pb-modal-close" onclick="pbCloseApprovalModal()" title="ปิด">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="pb-modal-body" style="height: 52vh;">
+      <img id="pb-approval-img" src="" alt="Approval Preview">
+    </div>
+    <p id="pb-guest-approval-note">กรุณารอสักครู่ เจ้าหน้าที่กำลังตรวจและยืนยันภาพจากจอควบคุม</p>
+    <div class="pb-modal-actions">
+      <button class="pb-btn pb-btn-keep" onclick="pbConfirmApproval()" disabled>
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        บันทึกรูปนี้
+      </button>
+      <button class="pb-btn pb-btn-retake" onclick="pbRejectApproval()" disabled>
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        ถ่ายใหม่
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal for Viewing & Retaking an already-shot single photo -->
+<div id="pb-viewer-modal" class="pb-modal pb-hidden">
+  <div class="pb-modal-overlay" onclick="pbCloseModal()"></div>
+  <div class="pb-modal-box">
+    <div class="pb-modal-header">
+      <h3 id="pb-modal-title">ตรวจดูรูปภาพ</h3>
+      <button class="pb-modal-close" onclick="pbCloseModal()" title="ปิด">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="pb-modal-body">
+      <img id="pb-modal-img" src="" alt="Preview">
+    </div>
+    <div class="pb-modal-actions">
+      <button class="pb-btn pb-btn-keep" onclick="pbCloseModal()">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        บันทึกรูปนี้
+      </button>
+      <button class="pb-btn pb-btn-retake" onclick="pbRetakeCurrentModal()">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        ถ่ายใหม่
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Gallery Modal (View past completed 3-photo collages) -->
+<div id="pb-gallery-modal" class="pb-modal pb-hidden">
+  <div class="pb-modal-overlay" onclick="pbCloseGallery()"></div>
+  <div class="pb-gallery-box">
+    <!-- Grid View Header -->
+    <div class="pb-modal-header" id="pb-gallery-grid-header">
+      <h3 id="pb-gallery-modal-title">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        แกลเลอรีภาพถ่าย
+      </h3>
+      <div class="pb-gallery-tabs" id="pb-gallery-filter-tabs">
+        <button class="pb-gallery-tab active" id="pb-tab-all" onclick="pbSetGalleryFilter('all')">ทั้งหมด</button>
+        <button class="pb-gallery-tab" id="pb-tab-collage" onclick="pbSetGalleryFilter('collage')">โฟโต้สตริป</button>
+        <button class="pb-gallery-tab" id="pb-tab-image" onclick="pbSetGalleryFilter('image')">ภาพเดี่ยว</button>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <button class="pb-modal-close" onclick="pbRenderGalleryGrid()" title="รีเฟรช">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        </button>
+        <button class="pb-modal-close" onclick="pbCloseGallery()" title="ปิด">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Grid of Completed Photos -->
+    <div id="pb-gallery-folders" aria-label="โฟลเดอร์ภาพถ่าย"></div>
+    <div id="pb-gallery-folder-actions"></div>
+    <div id="pb-gallery-grid-view" class="pb-gallery-grid">
+      <!-- Injected dynamically -->
+    </div>
+
+    <!-- Detail View for Selected Completed Photo -->
+    <div id="pb-gallery-detail-view" style="display: none; flex-direction: column; gap: 14px;">
+      <div id="pb-gallery-queue-code" class="pb-gallery-queue-code" hidden></div>
+      <div id="pb-gallery-move-row" style="display:flex;gap:8px;align-items:center"><label for="pb-gallery-move-select">ย้ายไปโฟลเดอร์</label><select id="pb-gallery-move-select"></select><button type="button" onclick="pbMoveGalleryPhoto()">ย้ายภาพ</button></div>
+      <div class="pb-modal-body" style="height: 52vh;">
+        <img id="pb-gallery-detail-img" src="" alt="Photo Strip Preview">
+      </div>
+      <div id="pb-gallery-qr-row"><button id="pb-gallery-qr-zoom" type="button" onclick="pbOpenGalleryQrZoom()" title="ขยาย QR เพื่อสแกน"><img id="pb-gallery-qr" alt="QR สำหรับดาวน์โหลดภาพ"></button><a id="pb-gallery-download" target="_blank" rel="noopener">เปิดหน้าดาวน์โหลดภาพ</a><button id="pb-gallery-create-qr" type="button" onclick="pbCreateGalleryCloudQr()" hidden>สร้าง QR ออนไลน์</button><span id="pb-gallery-qr-status" aria-live="polite"></span></div>
+      <div class="pb-modal-actions">
+        <div class="pb-print-control">
+          <div class="pb-qty-stepper" title="เลือกจำนวนพิมพ์">
+            <button class="pb-qty-btn" onclick="pbChangeGalleryPrintQty(-1)" title="ลดจำนวน">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
+            <span class="pb-qty-val" id="pb-gallery-print-qty">1</span>
+            <button class="pb-qty-btn" onclick="pbChangeGalleryPrintQty(1)" title="เพิ่มจำนวน">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
+          </div>
+          <button class="pb-print-submit" onclick="pbPrintCurrentGalleryItem()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            พิมพ์ภาพ (<span id="pb-gallery-print-qty-label">1</span> ใบ)
+          </button>
+        </div>
+        <button class="pb-btn pb-btn-airdrop" onclick="pbShareCurrentGalleryItem()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          แชร์ AirDrop
+        </button>
+        <button class="pb-btn pb-btn-delete" onclick="pbDeleteCurrentGalleryItem()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+          ลบภาพนี้
+        </button>
+        <button class="pb-btn pb-btn-gallery" onclick="pbBackToGalleryGrid()">
+          กลับไปแกลเลอรี
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="pb-gallery-qr-lightbox" class="pb-modal pb-hidden" role="dialog" aria-modal="true" aria-label="QR สำหรับดาวน์โหลดภาพ" onclick="pbCloseGalleryQrZoom()">
+  <div class="pb-modal-overlay"></div><div class="pb-gallery-qr-large" onclick="event.stopPropagation()"><button type="button" onclick="pbCloseGalleryQrZoom()" aria-label="ปิด">✕</button><img id="pb-gallery-qr-large-img" alt="QR สำหรับดาวน์โหลดภาพขนาดใหญ่"><p>สแกนเพื่อดาวน์โหลดภาพ · ลิงก์ใช้ได้ 1 ชั่วโมงหลังอัปโหลด</p></div>
+</div>
+
+<!-- Print Queue Modal (Shows active printing photo & waiting queue) -->
+<div id="pb-print-queue-modal" class="pb-modal pb-hidden">
+  <div class="pb-modal-overlay" onclick="pbClosePrintQueueModal()"></div>
+  <div class="pb-modal-box" style="max-width: 680px;">
+    <div class="pb-modal-header">
+      <h3>
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        คิวการพิมพ์ภาพ (Print Queue)
+      </h3>
+      <button class="pb-modal-close" onclick="pbClosePrintQueueModal()" title="ปิด">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <div class="pb-print-queue-body" id="pb-print-queue-content" style="max-height: 60vh; overflow-y: auto; padding: 6px; display: flex; flex-direction: column; gap: 16px;">
+      <!-- Populated dynamically by pbRenderPrintQueueContent -->
+    </div>
+
+    <div class="pb-modal-actions" style="border-top: 1px solid #f1f5f9; padding-top: 14px; margin-top: 4px;">
+      <button class="pb-btn" style="border: 1.5px solid #ef4444; color: #ef4444; min-width: 130px;" onclick="pbClearAllPrintQueue()">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+        ล้างคิวเครื่องหลัก
+      </button>
+      <button class="pb-btn pb-btn-gallery" style="min-width: 100px;" onclick="pbClosePrintQueueModal()">
+        ปิดหน้าต่าง
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+window.onerror = function(msg, url, line, col, error) {
+    fetch('/api/debug/client-log', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({type: 'error', msg: msg, url: url, line: line, col: col, stack: error ? error.stack : ''})
+    }).catch(function(){});
+    return false;
+};
+window.addEventListener('unhandledrejection', function(e) {
+    fetch('/api/debug/client-log', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({type: 'unhandledrejection', reason: String(e.reason)})
+    }).catch(function(){});
+});
+
+// Toast notification (PURE WHITE)
+var toastTimer = null;
+function pbShowToast(msg, duration) {
+  var t = document.getElementById("pb-toast");
+  var text = document.getElementById("pb-toast-text");
+  if (!t || !text) return;
+  text.innerText = msg;
+  t.classList.remove("pb-hidden");
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(function() {
+    t.classList.add("pb-hidden");
+  }, duration || 3000);
+}
+
+// Global Gallery state
+var galleryItems = [];
+var currentGalleryItemId = null;
+var currentGalleryFilter = 'all';
+var pbGalleryFolders = { folders: [], active_id: null, assignments: {} };
+var pbGalleryFolderId = 'all';
+
+function pbFolderIdForItem(item) {
+  var assigned = pbGalleryFolders.assignments[item.id];
+  if (assigned && pbGalleryFolders.folders.some(function (folder) { return folder.id === assigned; })) return assigned;
+  return 'date-' + String(item.created_at || '').slice(0, 10);
+}
+
+function pbRenderFolderControls() {
+  var bar = document.getElementById('pb-gallery-folders');
+  var actions = document.getElementById('pb-gallery-folder-actions');
+  if (!bar || !actions) return;
+  bar.replaceChildren();
+  var caption = document.createElement('div');
+  caption.className = 'pb-folder-caption';
+  caption.textContent = 'แฟ้มภาพ / เลือกโครงการ';
+  bar.appendChild(caption);
+  var shelf = document.createElement('div');
+  shelf.className = 'pb-folder-shelf';
+  [{ id: 'all', name: 'ทั้งหมด', count: galleryItems.length }].concat(pbGalleryFolders.folders).forEach(function (folder) {
+    var button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'pb-folder-card pb-folder-card--' + (folder.kind || 'all') + (folder.id === pbGalleryFolderId ? ' is-selected' : '');
+    button.setAttribute('aria-pressed', folder.id === pbGalleryFolderId ? 'true' : 'false');
+    var top = document.createElement('span');
+    top.className = 'pb-folder-card-top';
+    top.textContent = folder.kind === 'project' ? 'แฟ้มโครงการ' : folder.kind === 'date' ? 'แฟ้มตามวันที่' : 'คลังภาพ';
+    var face = document.createElement('span');
+    face.className = 'pb-folder-card-face';
+    var name = document.createElement('strong');
+    name.textContent = folder.name;
+    var bottom = document.createElement('span');
+    bottom.className = 'pb-folder-card-bottom';
+    var count = document.createElement('span');
+    var countNumber = document.createElement('b');
+    countNumber.textContent = String(folder.count);
+    count.append(countNumber, document.createTextNode(' รูป'));
+    var mark = document.createElement('span');
+    mark.textContent = pbGalleryFolders.active_id === folder.id ? '● กำลังใช้' : folder.kind === 'project' ? 'โครงการ' : folder.kind === 'date' ? 'ภาพเก่า' : 'ทุกแฟ้ม';
+    bottom.append(count, mark);
+    face.append(name, bottom);
+    button.append(top, face);
+    button.onclick = function () { pbGalleryFolderId = folder.id; pbRenderGalleryGrid(); };
+    shelf.appendChild(button);
+  });
+  bar.appendChild(shelf);
+  actions.replaceChildren();
+  var create = document.createElement('button');
+  create.className = 'pb-folder-action pb-folder-action-primary';
+  create.textContent = '＋ สร้างแฟ้มโครงการ';
+  create.onclick = async function () {
+    var name = prompt('ชื่อโครงการใหม่');
+    if (!name || !name.trim()) return;
+    try {
+      var project = await pbGalleryFolderRequest('/api/share/gallery-folders', 'POST', { name: name.trim() });
+      pbGalleryFolderId = project.id;
+      pbRenderGalleryGrid();
+    } catch (error) { pbShowToast(error.message, 5000); }
+  };
+  actions.appendChild(create);
+  var selected = pbGalleryFolders.folders.find(function (folder) { return folder.id === pbGalleryFolderId; });
+  if (!selected) return;
+  if (selected.kind === 'project') {
+    var active = document.createElement('button');
+    active.className = 'pb-folder-action';
+    active.textContent = pbGalleryFolders.active_id === selected.id ? '✓ โครงการที่ใช้อยู่' : 'ใช้แฟ้มนี้กับภาพถัดไป';
+    active.disabled = pbGalleryFolders.active_id === selected.id;
+    active.onclick = async function () { try { await pbGalleryFolderRequest('/api/share/gallery-folders/active', 'PUT', { folder_id: selected.id }); pbRenderGalleryGrid(); } catch (error) { pbShowToast(error.message, 5000); } };
+    actions.appendChild(active);
+  }
+  var remove = document.createElement('button');
+  remove.className = 'pb-folder-action pb-folder-action-danger';
+  remove.textContent = 'ลบโฟลเดอร์และภาพจริง';
+  remove.onclick = async function () {
+    try {
+      var preview = await pbGalleryFolderRequest('/api/share/gallery-folders/' + encodeURIComponent(selected.id) + '/delete-preview');
+      var answer = prompt('จะลบภาพ ' + preview.photo_count + ' รูป (รวมไฟล์ที่เกี่ยวข้อง ' + preview.total_items + ' รายการ) จาก Mac และภาพออนไลน์ ' + preview.online_count + ' รายการ\nพิมพ์ชื่อโฟลเดอร์ "' + preview.name + '" เพื่อยืนยัน');
+      if (answer !== preview.name) return;
+      await pbGalleryFolderRequest('/api/share/gallery-folders/' + encodeURIComponent(selected.id), 'DELETE', { confirm_name: answer });
+      pbGalleryFolderId = 'all';
+      pbRenderGalleryGrid();
+      pbShowToast('ลบแล้ว ไฟล์สำรองอยู่ในถังรีไซเคิลของ Photobooth', 5000);
+    } catch (error) { pbShowToast(error.message, 6000); }
+  };
+  actions.appendChild(remove);
+}
+
+async function pbGalleryFolderRequest(url, method, body) {
+  var isRead = !method || method === 'GET';
+  var controller = isRead ? new AbortController() : null;
+  var timeout = controller ? setTimeout(function() { controller.abort(); }, 8000) : null;
+  var response;
+  try {
+    response = await fetch(url, { method: method || 'GET', headers: body ? { 'Content-Type': 'application/json' } : {}, body: body ? JSON.stringify(body) : undefined, cache: 'no-store', signal: controller ? controller.signal : undefined });
+  } finally {
+    if (timeout) clearTimeout(timeout);
+  }
+  var data = await response.json().catch(function () { return {}; });
+  if (!response.ok) throw new Error(data.detail || 'ดำเนินการไม่สำเร็จ');
+  return data;
+}
+
+window.pbMoveGalleryPhoto = async function () {
+  if (!currentGalleryItemId) return;
+  var select = document.getElementById('pb-gallery-move-select');
+  try {
+    await pbGalleryFolderRequest('/api/share/gallery-folders/media/' + encodeURIComponent(currentGalleryItemId), 'PUT', { folder_id: select.value || null });
+    pbShowToast('ย้ายภาพทั้งชุดแล้ว', 3000);
+    pbRenderGalleryGrid();
+  } catch (error) { pbShowToast(error.message, 5000); }
+};
+
+var pbGalleryItemsFetchPromise = null;
+async function pbFetchAllGalleryItems() {
+  if (pbGalleryItemsFetchPromise) return pbGalleryItemsFetchPromise;
+  pbGalleryItemsFetchPromise = (async function() {
+    var all = [];
+    for (var offset = 0; offset < 10000; offset += 500) {
+      var controller = new AbortController();
+      var timeout = setTimeout(function() { controller.abort(); }, 8000);
+      var response;
+      try {
+        response = await fetch('/api/mediacollection/?offset=' + offset + '&limit=500', { cache: 'no-store', signal: controller.signal });
+      } finally {
+        clearTimeout(timeout);
+      }
+      if (!response.ok) throw new Error('โหลดแกลเลอรีไม่สำเร็จ');
+      var batch = await response.json();
+      if (!Array.isArray(batch)) throw new Error('ข้อมูลแกลเลอรีไม่ถูกต้อง');
+      all.push.apply(all, batch);
+      if (batch.length < 500) break;
+    }
+    return all;
+  })().finally(function() { pbGalleryItemsFetchPromise = null; });
+  return pbGalleryItemsFetchPromise;
+}
+
+var pbGalleryCountPending = false;
+var pbGalleryRenderSeq = 0;
+var pbGalleryCloudTimer = null;
+var pbGalleryCloudToken = 0;
+function pbEscapeHtml(value) {
+  return String(value == null ? "" : value).replace(/[&<>"']/g, function(ch) {
+    return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[ch];
+  });
+}
+function pbAssertOk(response, fallbackMsg) {
+  if (response.ok) return response;
+  return response.clone().json().catch(function() { return null; }).then(function(body) {
+    var msg = (body && (body.detail || body.error)) || fallbackMsg || ("คำขอไม่สำเร็จ (HTTP " + response.status + ")");
+    throw new Error(msg);
+  });
+}
+function pbUpdateGalleryCount() {
+  if (pbGalleryCountPending) return;
+  pbGalleryCountPending = true;
+  Promise.all([pbFetchAllGalleryItems(), pbGalleryFolderRequest('/api/share/gallery-folders')])
+    .then(function(result) {
+      var items = result[0];
+      pbGalleryFolders = result[1];
+      if (Array.isArray(items)) {
+        var validItems = items.filter(function(i) { return i.show_in_gallery !== false; });
+        var countEl = document.getElementById("pb-gallery-count");
+        if (countEl) countEl.innerText = validItems.length + " รูป";
+        galleryItems = validItems;
+
+        // Update floating gallery button mini thumbnail
+        var thumbWrap = document.getElementById("pb-gallery-btn-thumb");
+        var thumbImg = document.getElementById("pb-gallery-btn-img");
+        var iconEl = document.getElementById("pb-gallery-btn-icon");
+        if (thumbWrap && thumbImg && validItems.length > 0) {
+          thumbImg.src = "/media/thumbnail/" + encodeURIComponent(validItems[0].id);
+          thumbWrap.style.display = "block";
+          if (iconEl) iconEl.style.display = "none";
+        } else if (thumbWrap && thumbImg) {
+          thumbWrap.style.display = "none";
+          thumbImg.removeAttribute("src");
+          if (iconEl) iconEl.style.display = "";
+        }
+      }
+    })
+    .catch(function(){})
+    .finally(function() { pbGalleryCountPending = false; });
+}
+if (document.documentElement.dataset.pbView !== "guest") {
+  pbUpdateGalleryCount();
+}
+
+window.pbOpenGallery = function() {
+  var modal = document.getElementById("pb-gallery-modal");
+  if (modal) {
+    modal.classList.remove("pb-hidden");
+    pbRenderGalleryGrid();
+  }
+};
+
+window.pbCloseGallery = function() {
+  var modal = document.getElementById("pb-gallery-modal");
+  if (modal) {
+    modal.classList.add("pb-hidden");
+    pbBackToGalleryGrid();
+  }
+};
+
+window.pbSetGalleryFilter = function(filter) {
+  currentGalleryFilter = filter;
+  var tabs = ["all", "collage", "image"];
+  tabs.forEach(function(t) {
+    var el = document.getElementById("pb-tab-" + t);
+    if (el) {
+      if (t === filter) el.classList.add("active");
+      else el.classList.remove("active");
+    }
+  });
+  pbRenderGalleryGrid();
+};
+
+function pbRenderGalleryGrid() {
+  var galleryBox = document.querySelector('#pb-gallery-modal .pb-gallery-box');
+  if (galleryBox) galleryBox.classList.remove('pb-gallery-detail-mode');
+  var grid = document.getElementById("pb-gallery-grid-view");
+  var detail = document.getElementById("pb-gallery-detail-view");
+  var headerTitle = document.getElementById("pb-gallery-modal-title");
+  var tabs = document.getElementById("pb-gallery-filter-tabs");
+  
+  if (detail) detail.style.display = "none";
+  if (grid) grid.style.display = "grid";
+  if (tabs) tabs.style.display = "flex";
+  if (headerTitle) {
+    headerTitle.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg> แกลเลอรีภาพถ่าย';
+  }
+
+  var seq = ++pbGalleryRenderSeq;
+  if (!grid.dataset.pbClickBound) {
+    grid.dataset.pbClickBound = "1";
+    grid.addEventListener("click", function(event) {
+      var card = event.target.closest(".pb-gallery-card[data-media-id]");
+      if (!card) return;
+      pbViewGalleryItem(card.dataset.mediaId, card.dataset.timeStr || "", card.dataset.mediaType || "image");
+    });
+  }
+  grid.innerHTML = '<div style="text-align:center; padding:40px; grid-column:1/-1; color:#64748b;">กำลังโหลดรูปภาพ...</div>';
+
+  Promise.all([pbFetchAllGalleryItems(), pbGalleryFolderRequest('/api/share/gallery-folders')])
+    .then(function(result) {
+      if (seq !== pbGalleryRenderSeq) return;
+      var items = result[0];
+      pbGalleryFolders = result[1];
+      if (Array.isArray(items)) {
+        var allValid = items.filter(function(i) { return i.show_in_gallery !== false; });
+        var filtered = allValid;
+        if (currentGalleryFilter === "collage") {
+          filtered = allValid.filter(function(i) { return i.media_type === "collage"; });
+        } else if (currentGalleryFilter === "image") {
+          filtered = allValid.filter(function(i) { return i.media_type === "image"; });
+        }
+        galleryItems = allValid;
+        if (pbGalleryFolderId !== 'all' && !pbGalleryFolders.folders.some(function (folder) { return folder.id === pbGalleryFolderId; })) pbGalleryFolderId = 'all';
+        if (pbGalleryFolderId !== 'all') filtered = filtered.filter(function (item) { return pbFolderIdForItem(item) === pbGalleryFolderId; });
+        pbRenderFolderControls();
+        
+        var countEl = document.getElementById("pb-gallery-count");
+        if (countEl) countEl.innerText = allValid.length + " รูป";
+        
+        if (filtered.length === 0) {
+          var emptyMsg = "ยังไม่มีรูปภาพในหมวดหมู่นี้";
+          if (currentGalleryFilter === "collage") {
+            emptyMsg = "ยังไม่มีชุดภาพที่ถ่ายเสร็จ<br><span style=\"font-size:13px; opacity:0.7;\">ถ่ายรูปให้ครบตามจำนวนช่องของเทมเพลตเพื่อสร้างภาพได้เลย</span>";
+          } else if (currentGalleryFilter === "image") {
+            emptyMsg = "ยังไม่มีภาพเดี่ยว";
+          } else {
+            emptyMsg = "ยังไม่มีรูปภาพในแกลเลอรี<br><span style=\"font-size:13px; opacity:0.7;\">กดชัตเตอร์ที่กล้องเพื่อเริ่มถ่ายรูปแรกได้เลย</span>";
+          }
+          grid.innerHTML = '<div class="pb-gallery-empty" style="grid-column:1/-1; text-align:center; padding:60px 20px; color:#64748b; font-size:15px; font-weight:500;">' + emptyMsg + '</div>';
+          return;
+        }
+
+        var html = "";
+        filtered.forEach(function(item) {
+          var timeStr = "";
+          try {
+            var date = new Date(item.created_at);
+            if (!isNaN(date.getTime())) {
+              timeStr = date.toLocaleDateString("th-TH", { day: "numeric", month: "short" }) + " " +
+                        date.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" });
+            }
+          } catch(e) {}
+          
+          var badgeText = "รูปภาพ";
+          if (item.media_type === "collage") {
+            badgeText = "ชุดภาพสมบูรณ์";
+          } else if (item.media_type === "image") {
+            badgeText = "ภาพเดี่ยว";
+          }
+
+          var encodedId = encodeURIComponent(item.id);
+          var safeId = pbEscapeHtml(item.id);
+          var safeTime = pbEscapeHtml(timeStr);
+          var safeMediaType = pbEscapeHtml(item.media_type);
+          var thumbSrc = pbEscapeHtml("/media/thumbnail/" + encodedId);
+          var previewSrc = pbEscapeHtml("/media/preview/" + encodedId);
+          
+          html += '<div class="pb-gallery-card" data-media-id="' + safeId + '" data-time-str="' + safeTime + '" data-media-type="' + safeMediaType + '">' +
+                  '  <div class="pb-gallery-card-thumb">' +
+                  '    <img src="' + thumbSrc + '" loading="lazy" decoding="async" onerror="if(!this.dataset.tried){this.dataset.tried=1; this.src=\'' + previewSrc + '\';}" alt="Photo">' +
+                  '  </div>' +
+                  '  <div class="pb-gallery-card-info">' +
+                  '    <span class="pb-gallery-card-time">' + (safeTime || "ภาพถ่าย") + '</span>' +
+                  '    <span class="pb-gallery-card-badge">' + badgeText + '</span>' +
+                  '  </div>' +
+                  '</div>';
+        });
+        grid.innerHTML = html;
+        if (typeof window.pbDecorateGuestQueueGallery === "function") window.pbDecorateGuestQueueGallery();
+      }
+    })
+    .catch(function(err) {
+      if (seq !== pbGalleryRenderSeq) return;
+      grid.innerHTML = '<div class="pb-gallery-empty" style="grid-column:1/-1; text-align:center; padding:40px; color:#dc2626;">เกิดข้อผิดพลาดในการโหลดรูปภาพ</div>';
+    });
+}
+
+window.pbViewGalleryItem = function(id, timeStr, mediaType) {
+  currentGalleryItemId = id;
+  var galleryBox = document.querySelector('#pb-gallery-modal .pb-gallery-box');
+  if (galleryBox) galleryBox.classList.add('pb-gallery-detail-mode');
+  var moveSelect = document.getElementById('pb-gallery-move-select');
+  if (moveSelect) {
+    moveSelect.replaceChildren();
+    [{ id: '', name: 'โฟลเดอร์ตามวันที่' }].concat(pbGalleryFolders.folders.filter(function (folder) { return folder.kind === 'project'; })).forEach(function (folder) {
+      var option = document.createElement('option');
+      option.value = folder.id;
+      option.textContent = folder.name;
+      moveSelect.appendChild(option);
+    });
+    moveSelect.value = pbGalleryFolders.assignments[id] || '';
+  }
+  var grid = document.getElementById("pb-gallery-grid-view");
+  var detail = document.getElementById("pb-gallery-detail-view");
+  var headerTitle = document.getElementById("pb-gallery-modal-title");
+  var tabs = document.getElementById("pb-gallery-filter-tabs");
+
+  if (grid) grid.style.display = "none";
+  if (tabs) tabs.style.display = "none";
+  if (detail) detail.style.display = "flex";
+  if (headerTitle) {
+    var typeLabel = mediaType === "collage" ? "ชุดภาพ" : "ภาพถ่าย";
+    headerTitle.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg> ตรวจดู' + typeLabel + (timeStr ? ' (' + pbEscapeHtml(timeStr) + ')' : '');
+  }
+
+  var img = document.getElementById("pb-gallery-detail-img");
+  if (img) {
+    img.style.opacity = "0.4";
+    img.onerror = function() {
+      this.onerror = null;
+      this.src = "/media/full/" + encodeURIComponent(id);
+    };
+    img.onload = function() {
+      this.style.opacity = "1";
+    };
+    img.src = "/media/preview/" + encodeURIComponent(id);
+  }
+  if (typeof window.pbShowGalleryQueueCode === "function") window.pbShowGalleryQueueCode(id);
+  var qr = document.getElementById("pb-gallery-qr");
+  var qrZoom = document.getElementById("pb-gallery-qr-zoom");
+  var createQr = document.getElementById("pb-gallery-create-qr");
+  var download = document.getElementById("pb-gallery-download");
+  var qrStatus = document.getElementById("pb-gallery-qr-status");
+  if (qr) { qr.style.display = "none"; qr.removeAttribute("src"); }
+  if (qrZoom) qrZoom.hidden = true;
+  if (createQr) { createQr.hidden = true; createQr.disabled = false; }
+  if (download) download.href = "/api/share/download-page/" + encodeURIComponent(id);
+  if (qrStatus) qrStatus.textContent = "กำลังตรวจ QR…";
+  clearTimeout(pbGalleryCloudTimer);
+  pbGalleryCloudToken += 1;
+  window.pbRefreshGalleryCloud = function(attempt, token) {
+    var activeToken = token != null ? token : ++pbGalleryCloudToken;
+    clearTimeout(pbGalleryCloudTimer);
+    fetch("/api/share/cloud-status/" + encodeURIComponent(id), { cache: "no-store" })
+      .then(function(response) { return response.ok ? response.json() : { status: "disabled" }; })
+      .then(function(cloud) {
+        if (currentGalleryItemId !== id || activeToken !== pbGalleryCloudToken) return;
+        if (cloud.status === "ready") {
+          if (qr) { qr.src = "/api/share/qr/" + encodeURIComponent(id) + ".svg?t=" + Date.now(); qr.style.display = ""; }
+          if (qrZoom) qrZoom.hidden = false;
+          if (createQr) createQr.hidden = true;
+          if (download) download.href = cloud.share_url;
+          if (qrStatus) qrStatus.textContent = "ใช้ได้ทุกเครือข่าย · หมดอายุ " + new Date(cloud.expires_at * 1000).toLocaleTimeString("th-TH", {hour: "2-digit", minute: "2-digit"});
+        } else if (cloud.status === "offline") {
+          if (qr) { qr.src = "/api/share/qr/" + encodeURIComponent(id) + ".svg?t=" + Date.now(); qr.style.display = ""; }
+          if (qrZoom) qrZoom.hidden = false;
+          if (createQr) createQr.hidden = true;
+          if (qrStatus) qrStatus.textContent = "โหมดออฟไลน์ · ใช้พิมพ์ / AirDrop หรือ QR วงแลน/สายต่อตรงได้ทันที";
+        } else if (cloud.status === "disabled") {
+          if (qr) { qr.src = "/api/share/qr/" + encodeURIComponent(id) + ".svg?t=" + Date.now(); qr.style.display = ""; }
+          if (qrZoom) qrZoom.hidden = false;
+          if (createQr) { createQr.hidden = false; createQr.textContent = "สร้าง QR ออนไลน์"; }
+          if (qrStatus) qrStatus.textContent = "QR ปัจจุบันใช้ Wi-Fi เดียวกับ Mac · กดสร้าง QR ออนไลน์เพื่อใช้ทุกเครือข่าย";
+        } else if (cloud.status === "failed") {
+          if (qr) { qr.src = "/api/share/qr/" + encodeURIComponent(id) + ".svg?t=" + Date.now(); qr.style.display = ""; }
+          if (qrZoom) qrZoom.hidden = false;
+          if (createQr) { createQr.hidden = false; createQr.textContent = "ลองสร้าง QR ออนไลน์อีกครั้ง"; }
+          if (qrStatus) qrStatus.textContent = "อัปโหลดออนไลน์ไม่สำเร็จ · ใช้ QR วงแลนสำรอง หรือกดลองใหม่เมื่อมีเน็ต";
+        } else if (qrStatus) {
+          qrStatus.textContent = cloud.status === "expired" ? "QR หมดอายุแล้ว · กดสร้างใหม่ได้" : "กำลังอัปโหลด · ภาพยังอยู่บน Mac";
+          if (createQr) { createQr.hidden = cloud.status !== "expired"; createQr.textContent = "สร้าง QR ใหม่"; }
+        }
+        if ((cloud.status === "uploading" || cloud.status === "failed" || cloud.status === "pending") && attempt < 40) {
+          pbGalleryCloudTimer = setTimeout(function() {
+            if (currentGalleryItemId === id && activeToken === pbGalleryCloudToken) window.pbRefreshGalleryCloud(attempt + 1, activeToken);
+          }, 3000);
+        }
+      }).catch(function() {
+        if (currentGalleryItemId === id && activeToken === pbGalleryCloudToken && qrStatus) {
+          qrStatus.textContent = "ตรวจ QR ไม่ได้ · ภาพยังอยู่บน Mac";
+        }
+      });
+  };
+  window.pbRefreshGalleryCloud(0, pbGalleryCloudToken);
+
+  // Reset print quantity to 1
+  galleryPrintQty = 1;
+  var gVal = document.getElementById("pb-gallery-print-qty");
+  var gLbl = document.getElementById("pb-gallery-print-qty-label");
+  if (gVal) gVal.innerText = "1";
+  if (gLbl) gLbl.innerText = "1";
+};
+
+window.pbCreateGalleryCloudQr = function() {
+  var id = currentGalleryItemId;
+  if (!id) return;
+  clearTimeout(pbGalleryCloudTimer);
+  var token = ++pbGalleryCloudToken;
+  var button = document.getElementById("pb-gallery-create-qr");
+  var status = document.getElementById("pb-gallery-qr-status");
+  if (button) button.disabled = true;
+  if (status) status.textContent = "กำลังเริ่มอัปโหลด…";
+  fetch("/api/share/cloud-share/" + encodeURIComponent(id), { method: "POST", cache: "no-store" })
+    .then(function(response) { return response.json().then(function(data) { if (!response.ok) throw new Error(data.detail || "สร้าง QR ไม่สำเร็จ"); return data; }); })
+    .then(function() { if (currentGalleryItemId === id && token === pbGalleryCloudToken) window.pbRefreshGalleryCloud(0, token); })
+    .catch(function(error) { if (status) status.textContent = error.message; })
+    .finally(function() { if (button) button.disabled = false; });
+};
+
+window.pbOpenGalleryQrZoom = function() {
+  var source = document.getElementById("pb-gallery-qr");
+  var modal = document.getElementById("pb-gallery-qr-lightbox");
+  var large = document.getElementById("pb-gallery-qr-large-img");
+  if (!source || !source.src || !modal || !large) return;
+  large.src = source.src;
+  var note = modal.querySelector("p");
+  if (note) note.textContent = document.getElementById("pb-gallery-create-qr").hidden ? "สแกนเพื่อดาวน์โหลดภาพ · ลิงก์ออนไลน์ใช้ได้ 1 ชั่วโมงหลังอัปโหลด" : "สแกนเพื่อดาวน์โหลดภาพ · QR นี้ใช้ Wi-Fi เดียวกับ Mac";
+  modal.classList.remove("pb-hidden");
+};
+window.pbCloseGalleryQrZoom = function() {
+  var modal = document.getElementById("pb-gallery-qr-lightbox");
+  if (modal) modal.classList.add("pb-hidden");
+};
+
+window.pbBackToGalleryGrid = function() {
+  currentGalleryItemId = null;
+  clearTimeout(pbGalleryCloudTimer);
+  pbGalleryCloudToken += 1;
+  var galleryBox = document.querySelector('#pb-gallery-modal .pb-gallery-box');
+  if (galleryBox) galleryBox.classList.remove('pb-gallery-detail-mode');
+  var grid = document.getElementById("pb-gallery-grid-view");
+  var detail = document.getElementById("pb-gallery-detail-view");
+  var headerTitle = document.getElementById("pb-gallery-modal-title");
+  var tabs = document.getElementById("pb-gallery-filter-tabs");
+
+  if (detail) detail.style.display = "none";
+  if (grid) grid.style.display = "grid";
+  if (tabs) tabs.style.display = "flex";
+  if (headerTitle) {
+    headerTitle.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg> แกลเลอรีภาพถ่าย';
+  }
+};
+
+// Print Quantity State & Handlers
+var finishedPrintQty = 1;
+var galleryPrintQty = 1;
+
+window.pbChangeFinishedPrintQty = function(delta) {
+  finishedPrintQty = Math.max(1, Math.min(99, finishedPrintQty + delta));
+  var valEl = document.getElementById("pb-finished-print-qty");
+  var labelEl = document.getElementById("pb-finished-print-qty-label");
+  if (valEl) valEl.innerText = finishedPrintQty;
+  if (labelEl) labelEl.innerText = finishedPrintQty;
+};
+
+window.pbChangeGalleryPrintQty = function(delta) {
+  galleryPrintQty = Math.max(1, Math.min(99, galleryPrintQty + delta));
+  var valEl = document.getElementById("pb-gallery-print-qty");
+  var labelEl = document.getElementById("pb-gallery-print-qty-label");
+  if (valEl) valEl.innerText = galleryPrintQty;
+  if (labelEl) labelEl.innerText = galleryPrintQty;
+};
+
+// Print Actions with Quantity Support
+window.pbPrintItem = function(id, copies) {
+  var numCopies = copies || 1;
+  pbShowToast("กำลังส่งพิมพ์ภาพจำนวน " + numCopies + " ใบ...", 4000);
+  fetch("/api/share/actions/" + encodeURIComponent(id) + "/0", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ copies: String(numCopies) })
+  })
+    .then(function(res) { return pbAssertOk(res, "เกิดข้อผิดพลาดในการสั่งพิมพ์"); })
+    .then(function() {
+      pbShowToast("ส่งภาพเข้าคิวพิมพ์ (" + numCopies + " ใบ) เรียบร้อยแล้ว", 3500);
+      setTimeout(pbFetchPrintQueue, 500);
+    })
+    .catch(function(err) {
+      pbShowToast(err && err.message ? err.message : "เกิดข้อผิดพลาดในการสั่งพิมพ์", 3000);
+    });
+};
+
+window.pbPrintLatest = function() {
+  var copies = finishedPrintQty || 1;
+  pbShowToast("กำลังส่งพิมพ์ภาพจำนวน " + copies + " ใบ...", 4000);
+  fetch("/api/share/actions/latest/0", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ copies: String(copies) })
+  })
+    .then(function(res) { return pbAssertOk(res, "เกิดข้อผิดพลาดในการสั่งพิมพ์"); })
+    .then(function() {
+      pbShowToast("ส่งภาพเข้าคิวพิมพ์ (" + copies + " ใบ) เรียบร้อยแล้ว", 3500);
+      setTimeout(pbFetchPrintQueue, 500);
+    })
+    .catch(function(err) {
+      pbShowToast(err && err.message ? err.message : "เกิดข้อผิดพลาดในการสั่งพิมพ์", 3000);
+    });
+};
+
+window.pbPrintCurrentGalleryItem = function() {
+  if (currentGalleryItemId) {
+    pbPrintItem(currentGalleryItemId, galleryPrintQty || 1);
+  }
+};
+
+// ==========================================
+// PRINT QUEUE SYSTEM (Real-time monitoring)
+// ==========================================
+var printQueueData = null;
+
+window.pbOpenPrintQueueModal = function() {
+  var island = document.getElementById("pb-print-island");
+  if (island) island.open = false;
+  var modal = document.getElementById("pb-print-queue-modal");
+  if (modal) {
+    modal.classList.remove("pb-hidden");
+    pbFetchPrintQueue();
+  }
+};
+
+window.pbClosePrintQueueModal = function() {
+  var modal = document.getElementById("pb-print-queue-modal");
+  if (modal) {
+    modal.classList.add("pb-hidden");
+  }
+};
+
+var pbPrintQueueInFlight = false;
+window.pbFetchPrintQueue = function() {
+  if (pbPrintQueueInFlight) return;
+  pbPrintQueueInFlight = true;
+  var controller = typeof AbortController === "function" ? new AbortController() : null;
+  var timeout = controller ? setTimeout(function() { controller.abort(); }, 6000) : null;
+  fetch("/api/share/print_queue", { cache: "no-store", signal: controller ? controller.signal : undefined })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      printQueueData = data;
+      pbUpdatePrintQueueUI(data);
+    })
+    .catch(function(err) {
+      console.warn("Print queue fetch error:", err);
+      if (typeof window.pbUpdateOperatorStatus === "function") window.pbUpdateOperatorStatus({ printError: true });
+    })
+    .finally(function() {
+      if (timeout) clearTimeout(timeout);
+      pbPrintQueueInFlight = false;
+    });
+};
+
+function pbUpdatePrintQueueUI(data) {
+  if (typeof window.pbUpdateOperatorStatus === "function") window.pbUpdateOperatorStatus({ print: data });
+  var btn = document.getElementById("pb-print-queue-btn");
+  var txt = document.getElementById("pb-print-queue-text");
+  var badge = document.getElementById("pb-print-queue-badge");
+  var finBadge = document.getElementById("pb-finished-queue-badge");
+
+  var count = (data && data.queue_count) || 0;
+  var isPrinting = data && data.is_printing;
+
+  if (badge) badge.innerText = count;
+  if (finBadge) {
+    finBadge.innerText = count;
+    finBadge.style.display = count > 0 ? "inline-block" : "none";
+  }
+
+  if (btn) {
+    if (isPrinting && count > 0) {
+      btn.classList.add("is-printing");
+      if (txt) {
+        var activeJob = data.active_job;
+        var jobText = activeJob ? "กำลังพิมพ์ " + (activeJob.queue_code || ("#" + activeJob.job_id)) : "กำลังพิมพ์";
+        txt.innerText = jobText + (count > 1 ? " (รอ " + (count - 1) + ")" : "");
+      }
+    } else {
+      btn.classList.remove("is-printing");
+      if (txt) txt.innerText = "คิวการพิมพ์";
+    }
+  }
+
+  var modal = document.getElementById("pb-print-queue-modal");
+  if (modal && !modal.classList.contains("pb-hidden")) {
+    pbRenderPrintQueueContent(data);
+  }
+}
+
+function pbRenderPrintQueueContent(data) {
+  var container = document.getElementById("pb-print-queue-content");
+  if (!container) return;
+  if (!container.dataset.pbCancelBound) {
+    container.dataset.pbCancelBound = "1";
+    container.addEventListener("click", function(event) {
+      var resolveBtn = event.target.closest("[data-resolve-outcome]");
+      if (resolveBtn) {
+        window.pbResolveUnknownPrintJob(
+          resolveBtn.getAttribute("data-resolve-queue"),
+          resolveBtn.getAttribute("data-resolve-job-id") || null,
+          resolveBtn.getAttribute("data-resolve-cups-id") || null,
+          resolveBtn.getAttribute("data-resolve-outcome")
+        );
+        return;
+      }
+      var btn = event.target.closest("[data-cancel-job-id]");
+      if (btn) window.pbCancelPrintJob(btn.getAttribute("data-cancel-job-id"));
+    });
+  }
+
+  var queue = (data && data.queue) || [];
+  var unknownJobs = (data && data.unknown_print_jobs) || [];
+  var safe = pbEscapeHtml;
+  var printersHtml = '<div style="display:flex;flex-wrap:wrap;gap:8px;">' + ((data && data.printers) || []).map(function(printer) {
+    return '<span style="padding:7px 10px;border:1px solid #dbe3eb;border-radius:9px;font-size:12px;">' + safe(printer.name) + ' · ' + (printer.online ? 'พร้อม' : 'ไม่พร้อม') + ' · ค้าง ' + Number(printer.queue_count || 0) + '</span>';
+  }).join('') + '</div>';
+  var unknownHtml = '';
+  if (unknownJobs.length > 0) {
+    unknownHtml =
+      '<div style="background:#fff7ed;border:1.5px solid #fdba74;border-radius:12px;padding:12px 14px;">' +
+      '  <div style="font-size:13px;font-weight:800;color:#9a3412;margin-bottom:8px;">งานพิมพ์สถานะไม่แน่ชัด (' + unknownJobs.length + ' รายการ) — กรุณาตรวจแผ่นกระดาษจริงก่อนยืนยัน (ระบบไม่พิมพ์ซ้ำอัตโนมัติ)</div>' +
+      '  <div style="display:flex;flex-direction:column;gap:8px;">' +
+      unknownJobs.map(function(job) {
+        return '<div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;background:#fff;border:1px solid #fed7aa;border-radius:9px;padding:8px 10px;">' +
+          '<div>' +
+          '  <div style="font-size:13px;font-weight:700;color:#0f172a;">คิว ' + safe(job.queue_code) + (job.cups_id ? ' · #' + safe(job.cups_id) : '') + '</div>' +
+          '  <div style="font-size:11px;color:#64748b;">' + safe(job.printer || 'เครื่องพิมพ์') + ' · ' + Number(job.copies || 1) + ' ใบ</div>' +
+          '</div>' +
+          '<div style="display:flex;gap:6px;flex-wrap:wrap;">' +
+          '  <button type="button" class="pb-btn" style="height:32px;padding:0 10px;font-size:12px;border:1.5px solid #16a34a;color:#15803d;" data-resolve-outcome="printed" data-resolve-queue="' + safe(job.queue_code) + '" data-resolve-job-id="' + safe(job.print_job_id || '') + '" data-resolve-cups-id="' + safe(job.cups_id || '') + '">ยืนยันว่าพิมพ์ออกแล้ว</button>' +
+          '  <button type="button" class="pb-btn" style="height:32px;padding:0 10px;font-size:12px;border:1px solid #cbd5e1;color:#64748b;" data-resolve-outcome="canceled" data-resolve-queue="' + safe(job.queue_code) + '" data-resolve-job-id="' + safe(job.print_job_id || '') + '" data-resolve-cups-id="' + safe(job.cups_id || '') + '">ยกเลิกงานนี้</button>' +
+          '</div>' +
+          '</div>';
+      }).join('') +
+      '  </div>' +
+      '</div>';
+  }
+  if (queue.length === 0 && unknownJobs.length === 0) {
+    container.innerHTML = printersHtml +
+      '<div style="text-align: center; padding: 40px 20px; color: #64748b;">' +
+      '  <div style="width: 56px; height: 56px; border-radius: 50%; border: 2px solid #e2e8f0; display: flex; align-items: center; justify-content: center; margin: 0 auto 14px auto; color: #16a34a;">' +
+      '    <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' +
+      '  </div>' +
+      '  <div style="font-size: 17px; font-weight: 700; color: #0f172a; margin-bottom: 6px;">ไม่มีงานพิมพ์ในคิว</div>' +
+      '  <div style="font-size: 14px;">เลือกเครื่องที่พร้อมเมื่อส่งภาพเข้าคิวพิมพ์</div>' +
+      '</div>';
+    return;
+  }
+
+  var activeJobs = queue.filter(function(job) { return job.is_active; });
+  var waitingJobs = queue.filter(function(job) { return !job.is_active; });
+
+  var html = printersHtml + unknownHtml;
+
+  // 1. ACTIVE NOW PRINTING CARD
+  activeJobs.forEach(function(activeJob) {
+    var imgSrc = activeJob.preview_url || activeJob.thumbnail_url || '';
+    html += 
+      '<div style="background: #ffffff; border: 2px solid #0f172a; border-radius: 14px; padding: 16px; box-shadow: 0 4px 14px rgba(0,0,0,0.04);">' +
+      '  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">' +
+      '    <span style="font-size: 13px; font-weight: 700; color: #16a34a; display: flex; align-items: center; gap: 6px;">' +
+      '      <span style="width: 8px; height: 8px; border-radius: 50%; background: #16a34a; animation: pbPulse 1.5s infinite;"></span>' +
+      '      กำลังพิมพ์ภาพ ' + (activeJob.queue_code ? ('คิว ' + safe(activeJob.queue_code)) : '') +
+      '    </span>' +
+      '    <span style="font-size: 12px; font-weight: 600; color: #0f172a; background: #f8fafc; border: 1.5px solid #e2e8f0; padding: 2px 10px; border-radius: 8px;">' +
+      '      งานพิมพ์ #' + safe(activeJob.job_id) +
+      '    </span>' +
+      '  </div>' +
+      '  <div style="display: flex; gap: 16px; align-items: center;">' +
+      '    <div style="width: 85px; height: 125px; border-radius: 8px; overflow: hidden; border: 1.5px solid #e2e8f0; flex-shrink: 0; background: #f8fafc; display:flex; align-items:center; justify-content:center;">' +
+      (imgSrc ? '      <img src="' + safe(imgSrc) + '" style="width:100%; height:100%; object-fit: cover;">' : '      <span style="font-size:11px; color:#94a3b8;">ไม่มีตัวอย่าง</span>') +
+      '    </div>' +
+      '    <div style="display: flex; flex-direction: column; gap: 6px; flex: 1;">' +
+      '      <div style="font-size: 15px; font-weight: 700; color: #0f172a;">ภาพถ่ายโฟโต้สตริป 3 แอ็คชั่น</div>' +
+      '      <div style="font-size: 12px; color: #64748b;">' + safe(activeJob.printer_name) + '</div>' +
+      '      <div style="font-size: 12px; color: #64748b; font-family: monospace;">' + safe(activeJob.filename) + '</div>' +
+      '      <div style="font-size: 12px; color: #16a34a; font-weight: 600;">กระดาษขนาด 4x6 นิ้ว • พิมพ์แบบไร้ขอบ (Borderless)</div>' +
+      '      <div style="display: flex; gap: 8px; margin-top: 6px;">' +
+      '        <button type="button" class="pb-btn" style="height: 34px; min-width: 110px; padding: 0 12px; font-size: 12px; border: 1.5px solid #ef4444; color: #ef4444;" data-cancel-job-id="' + safe(activeJob.job_id) + '">' +
+      '          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
+      '          ยกเลิกการพิมพ์' +
+      '        </button>' +
+      '      </div>' +
+      '    </div>' +
+      '  </div>' +
+      '</div>';
+  });
+
+  // 2. WAITING JOBS LIST
+  if (waitingJobs.length > 0) {
+    html += 
+      '<div style="margin-top: 4px;">' +
+      '  <div style="font-size: 14px; font-weight: 700; color: #0f172a; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">' +
+      '    <span>รายการที่รอพิมพ์ในคิว (' + waitingJobs.length + ' ภาพ)</span>' +
+      '  </div>' +
+      '  <div style="display: flex; flex-direction: column; gap: 8px;">';
+
+    waitingJobs.forEach(function(job, idx) {
+      var wImgSrc = job.thumbnail_url || job.preview_url || '';
+      html += 
+        '    <div style="display: flex; align-items: center; justify-content: space-between; background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 8px 12px;">' +
+        '      <div style="display: flex; align-items: center; gap: 12px;">' +
+        '        <div style="width: 44px; height: 64px; border-radius: 6px; overflow: hidden; border: 1px solid #e2e8f0; background: #f8fafc; flex-shrink: 0; display:flex; align-items:center; justify-content:center;">' +
+        (wImgSrc ? '          <img src="' + safe(wImgSrc) + '" style="width:100%; height:100%; object-fit: cover;">' : '          <span style="font-size:10px; color:#94a3b8;">#</span>') +
+        '        </div>' +
+        '        <div>' +
+        '          <div style="font-size: 13px; font-weight: 700; color: #0f172a;">' + (job.queue_code ? ('คิว ' + safe(job.queue_code)) : ('ลำดับพิมพ์ ' + (idx + 1))) + ' (งานพิมพ์ #' + safe(job.job_id) + ')</div>' +
+        '          <div style="font-size: 11px; color: #64748b;">' + safe(job.printer_name) + ((data.printers || []).some(function(printer) { return printer.name === job.printer_name && !printer.online; }) ? ' · เครื่องไม่พร้อม' : '') + '</div>' +
+        '          <div style="font-size: 11px; color: #64748b; font-family: monospace;">' + safe(job.filename) + '</div>' +
+        '        </div>' +
+        '      </div>' +
+        '      <button type="button" class="pb-btn" style="height: 32px; min-width: 75px; padding: 0 10px; font-size: 12px; border: 1px solid #cbd5e1; color: #64748b;" data-cancel-job-id="' + safe(job.job_id) + '">' +
+        '        ยกเลิก' +
+        '      </button>' +
+        '    </div>';
+    });
+
+    html += 
+      '  </div>' +
+      '</div>';
+  }
+
+  container.innerHTML = html;
+}
+
+window.pbResolveUnknownPrintJob = function(queueCode, printJobId, cupsId, outcome) {
+  var promptMsg = outcome === "printed"
+    ? "ยืนยันว่าตรวจกระดาษจริงแล้ว และคิว " + queueCode + " พิมพ์ออกเรียบร้อยใช่หรือไม่?"
+    : "ยืนยันยกเลิกงานพิมพ์สถานะไม่แน่ชัดของคิว " + queueCode + " ใช่หรือไม่? (ระบบจะไม่พิมพ์ซ้ำอัตโนมัติ)";
+  if (!confirm(promptMsg)) return;
+  fetch("/api/share/guest-queue/print-jobs/resolve", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      queue_code: queueCode,
+      outcome: outcome,
+      print_job_id: printJobId || null,
+      cups_id: cupsId || null
+    })
+  })
+    .then(function(response) { return pbAssertOk(response, "อัปเดตสถานะงานพิมพ์ไม่สำเร็จ"); })
+    .then(function() {
+      pbShowToast(outcome === "printed" ? "ยืนยันการพิมพ์คิว " + queueCode + " แล้ว" : "ยกเลิกงานพิมพ์คิว " + queueCode + " แล้ว", 3000);
+      pbFetchPrintQueue();
+    })
+    .catch(function(error) {
+      pbShowToast((error && error.message) || "อัปเดตสถานะงานพิมพ์ไม่สำเร็จ", 3500);
+    });
+};
+
+window.pbCancelPrintJob = function(jobId) {
+  if (!confirm("ต้องการยกเลิกงานพิมพ์ #" + jobId + " ใช่หรือไม่?")) return;
+  fetch("/api/share/print_queue/" + encodeURIComponent(jobId), { method: "DELETE" })
+    .then(function(response) { return response.json(); })
+    .then(function(result) { if (!result.ok) throw new Error(result.error || "ยกเลิกไม่สำเร็จ"); })
+    .then(function() {
+      pbShowToast("ยกเลิกงานพิมพ์ #" + jobId + " เรียบร้อยแล้ว", 2500);
+      pbFetchPrintQueue();
+    })
+    .catch(function() {
+      pbShowToast("เกิดข้อผิดพลาดในการยกเลิก", 2500);
+    });
+};
+
+window.pbClearAllPrintQueue = function() {
+  var printerName = (printQueueData && printQueueData.printer) || "เครื่องหลัก";
+  if (!confirm("ต้องการล้างงานพิมพ์ทั้งหมดของ " + printerName + " ใช่หรือไม่? เครื่องอื่นจะไม่ถูกล้าง")) return;
+  fetch("/api/share/print_queue/clear", { method: "POST" })
+    .then(function(response) { return response.json(); })
+    .then(function(result) { if (!result.ok) throw new Error(result.error || "ล้างคิวไม่สำเร็จ"); })
+    .then(function() {
+      pbShowToast("ล้างคิวของ " + printerName + " แล้ว", 2500);
+      pbFetchPrintQueue();
+    })
+    .catch(function() {
+      pbShowToast("เกิดข้อผิดพลาดในการล้างคิว", 2500);
+    });
+};
+
+// AirDrop Actions
+window.pbShareItem = function(id) {
+  pbShowToast("กำลังเปิดระบบแชร์ AirDrop...", 3000);
+  
+  fetch("/media/full/" + id)
+    .then(function(res) { return res.blob(); })
+    .then(function(blob) {
+      var file = new File([blob], "photobooth-" + id.substring(0, 8) + ".jpg", { type: "image/jpeg" });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        navigator.share({
+          files: [file],
+          title: "ภาพถ่ายจาก Photobooth",
+          text: "ส่งรูปจาก Photobooth ผ่าน AirDrop"
+        }).then(function() {
+          pbShowToast("แชร์ภาพผ่าน AirDrop เรียบร้อยแล้ว", 3000);
+        }).catch(function(e) {
+          if (e.name !== "AbortError") {
+            triggerNativeAirDrop(id);
+          }
+        });
+      } else {
+        triggerNativeAirDrop(id);
+      }
+    })
+    .catch(function() {
+      triggerNativeAirDrop(id);
+    });
+};
+
+function triggerNativeAirDrop(id) {
+  fetch("/api/share/airdrop/" + id, { method: "POST" })
+    .then(function() {
+      pbShowToast("เปิดหน้าต่าง AirDrop บน Mac แล้ว", 3500);
+    })
+    .catch(function() {
+      window.open("/media/full/" + id, "_blank");
+    });
+}
+
+window.pbShareLatest = function() {
+  pbShowToast("กำลังเปิดระบบแชร์ AirDrop...", 3000);
+  fetch("/api/processing/status")
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      var latestId = (data.jobmodel && data.jobmodel.present_mediaitem_id) ||
+                     (galleryItems[0] && galleryItems[0].id);
+      if (latestId) {
+        pbShareItem(latestId);
+      } else {
+        fetch("/api/share/airdrop/latest", { method: "POST" })
+          .then(function() {
+            pbShowToast("เปิดหน้าต่าง AirDrop บน Mac แล้ว", 3500);
+          })
+          .catch(function(){});
+      }
+    })
+    .catch(function() {
+      fetch("/api/share/airdrop/latest", { method: "POST" }).catch(function(){});
+    });
+};
+
+window.pbShareCurrentGalleryItem = function() {
+  if (currentGalleryItemId) {
+    pbShareItem(currentGalleryItemId);
+  }
+};
+
+// Delete Actions
+window.pbDeleteCurrentGalleryItem = function() {
+  if (!currentGalleryItemId) return;
+  if (confirm("คุณต้องการลบรูปภาพนี้ออกจากแกลเลอรีใช่หรือไม่?")) {
+    var idToDelete = currentGalleryItemId;
+    fetch("/api/mediacollection/" + encodeURIComponent(idToDelete), { method: "DELETE" })
+      .then(function(res) { return pbAssertOk(res, "เกิดข้อผิดพลาดในการลบ"); })
+      .then(function() {
+        pbShowToast("ลบรูปภาพเรียบร้อยแล้ว", 3000);
+        pbBackToGalleryGrid();
+        pbRenderGalleryGrid();
+        pbUpdateGalleryCount();
+      })
+      .catch(function(err) {
+        pbShowToast(err && err.message ? err.message : "เกิดข้อผิดพลาดในการลบ", 3000);
+      });
+  }
+};
+
+// Restart Shooting
+window.pbRestartShooting = function() {
+  pbCloseGallery();
+  window.location.hash = "#/";
+  fetch("/api/processing/confirm").catch(function(){});
+  pbShowToast("พร้อมถ่ายรูปชุดใหม่แล้ว", 2500);
+
+  // Reset print quantity to 1
+  finishedPrintQty = 1;
+  var fVal = document.getElementById("pb-finished-print-qty");
+  var fLbl = document.getElementById("pb-finished-print-qty-label");
+  if (fVal) fVal.innerText = "1";
+  if (fLbl) fLbl.innerText = "1";
+};
+
+window.pbAbortAndRestart = function() {
+  if (confirm("ต้องการเริ่มถ่ายเซ็ตใหม่ตั้งแต่รูปที่ 1 ใช่หรือไม่?")) {
+    pbCaptureLoadingLatched = false;
+    pbSetCaptureLoading(false);
+    fetch("/api/processing/abort").then(function() {
+      pbShowToast("เริ่มถ่ายใหม่อีกครั้ง", 2000);
+      syncStatus();
+    }).catch(function(){});
+  }
+};
+
+// Photo Review Modal functions
+var currentModalSlot = null;
+var currentCapturedIds = [];
+var currentJobState = "idle";
+window.pbActiveCaptureCount = window.pbActiveCaptureCount || 3;
+
+window.pbEnsureSlotCount = function(count) {
+  count = Math.max(1, Math.min(6, parseInt(count, 10) || 3));
+  window.pbActiveCaptureCount = count;
+  var slots = document.querySelector("#photobooth-sidebar .pb-slots");
+  if (!slots || slots.children.length === count) return;
+  var html = "";
+  for (var index = 0; index < count; index++) {
+    html += '<div class="pb-slot" id="pb-slot-' + index + '" onclick="pbViewSlot(' + index + ')">' +
+      '<div class="pb-slot-header"><span class="pb-slot-label">รูปที่ ' + (index + 1) + '</span><span class="pb-slot-tag" id="pb-tag-' + index + '">รอถ่าย</span></div>' +
+      '<div class="pb-slot-thumb" id="pb-thumb-' + index + '"><span class="pb-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg></span></div></div>';
+  }
+  slots.innerHTML = html;
+};
+
+window.pbViewSlot = function(slotIndex) {
+  if (currentCapturedIds && currentCapturedIds[slotIndex]) {
+    currentModalSlot = slotIndex;
+    var title = document.getElementById("pb-modal-title");
+    if (title) title.innerText = "ตรวจดูรูปที่ " + (slotIndex + 1);
+    var img = document.getElementById("pb-modal-img");
+    if (img) img.src = "/api/processing/approval/" + currentCapturedIds[slotIndex];
+    var modal = document.getElementById("pb-viewer-modal");
+    if (modal) modal.classList.remove("pb-hidden");
+  } else {
+    alert("รูปที่ " + (slotIndex + 1) + " ยังไม่ได้ถ่าย กดชัตเตอร์ที่กล้องเพื่อเริ่มถ่ายได้เลย");
+  }
+};
+
+window.pbCloseModal = function() {
+  var modal = document.getElementById("pb-viewer-modal");
+  if (modal) modal.classList.add("pb-hidden");
+  currentModalSlot = null;
+};
+
+window.pbRetakeCurrentModal = function() {
+  if (currentModalSlot !== null) {
+    var slot = currentModalSlot;
+    pbCloseModal();
+    fetch("/api/processing/retake/" + slot).then(function() {
+      syncStatus();
+    }).catch(function(err) {
+      console.error(err);
+    });
+  }
+};
+
+// Live Approval Actions (Pure White Buttons)
+var pbApprovalActionInFlight = false;
+var pbApprovalImageReady = false;
+function pbSetApprovalButtonsEnabled(enabled) {
+  var allowed = enabled && document.documentElement.dataset.pbView === "operator" && !pbApprovalActionInFlight;
+  document.querySelectorAll("#pb-approval-modal .pb-modal-actions button").forEach(function(button) { button.disabled = !allowed; });
+}
+function pbSubmitApproval(decision) {
+  if (document.documentElement.dataset.pbView !== "operator" || pbApprovalActionInFlight || currentJobState !== "approval" || !pbApprovalImageReady) return;
+  var image = document.getElementById("pb-approval-img");
+  var captureId = image && image.getAttribute("data-id");
+  if (!captureId || !image.complete || image.naturalWidth === 0) return;
+  pbApprovalActionInFlight = true;
+  pbSetApprovalButtonsEnabled(false);
+  fetch("/api/share/approval/" + encodeURIComponent(captureId) + "/" + decision, { method: "POST" })
+    .then(function(response) {
+      if (!response.ok) throw new Error(response.status === 409 ? "ภาพนี้ได้รับการยืนยันจากอีกจอแล้ว" : "ส่งคำสั่งไม่สำเร็จ");
+      document.getElementById("pb-approval-modal").classList.add("pb-hidden");
+      pbCaptureLoadingLatched = false;
+      pbSetCaptureLoading(false);
+      pbShowToast(decision === "confirm" ? "บันทึกรูปนี้แล้ว" : "พร้อมถ่ายใหม่อีกครั้ง", 1500);
+    })
+    .catch(function(error) { pbShowToast(error.message, 2200); })
+    .finally(function() {
+      pbApprovalActionInFlight = false;
+      pbSetApprovalButtonsEnabled(pbApprovalImageReady && currentJobState === "approval");
+      syncStatus();
+    });
+}
+window.pbConfirmApproval = function() { pbSubmitApproval("confirm"); };
+window.pbRejectApproval = function() { pbSubmitApproval("reject"); };
+
+window.pbCloseApprovalModal = function() {
+  if (document.documentElement.dataset.pbView !== "operator") return;
+  var modal = document.getElementById("pb-approval-modal");
+  if (modal) modal.classList.add("pb-hidden");
+};
+
+// Native MJPEG Stream Auto-Reconnect Watcher & Watchdog
+var streamImg = document.getElementById("pb-camera-stream");
+window.pbCameraConnected = false;
+if (streamImg) {
+  streamImg.onerror = function() {
+    setTimeout(function() {
+      if (streamImg && window.pbCameraConnected && !window.pbApprovalImageActive) streamImg.src = "/api/aquisition/stream.mjpg?t=" + Date.now();
+    }, 800);
+  };
+}
+
+var lastStreamWatchdogTime = 0;
+function pbWatchdogCameraStream() {
+  if (!window.pbCameraConnected) return;
+  var now = Date.now();
+  if (now - lastStreamWatchdogTime < 3000) return;
+  lastStreamWatchdogTime = now;
+
+  var cameraStream = document.getElementById("pb-camera-stream");
+  var isFinished = document.documentElement.dataset.pbView !== "guest" && (currentJobState === "completed" || currentJobState === "present" || window.location.hash.includes("itempresenter"));
+  if (cameraStream && currentJobState !== "approval" && !isFinished) {
+    if (cameraStream.naturalWidth === 0) {
+      cameraStream.src = "/api/aquisition/stream.mjpg?t=" + now;
+    }
+  }
+}
+
+var prevJobState = null;
+var pbCaptureLoadingLatched = false;
+var pbCaptureStateRequestInFlight = false;
+var pbLastCaptureBusy = false;
+var pbStatusRequestInFlight = false;
+var pbStatusRequestPending = false;
+var pbCaptureLoadingReleaseTimer = null;
+var pbApprovalLoadToken = 0;
+var pbApprovalLoadTimer = null;
+var pbApprovalRetryTimer = null;
+window.pbApprovalImageActive = false;
+
+function pbClearApprovalImageTimers() {
+  if (pbApprovalLoadTimer) clearTimeout(pbApprovalLoadTimer);
+  if (pbApprovalRetryTimer) clearTimeout(pbApprovalRetryTimer);
+  pbApprovalLoadTimer = null;
+  pbApprovalRetryTimer = null;
+}
+
+function pbSetCaptureLoading(show, message) {
+  var overlay = document.getElementById("pb-capture-loading");
+  var text = document.getElementById("pb-capture-loading-text");
+  if (!overlay) return;
+  if (text && message) text.innerText = message;
+  overlay.classList.toggle("pb-hidden", !show);
+  overlay.setAttribute("aria-hidden", show ? "false" : "true");
+  document.body.setAttribute("aria-busy", show ? "true" : "false");
+}
+
+function pbCancelApprovalImageLoad(image) {
+  if (!image) return;
+  pbApprovalLoadToken += 1;
+  pbClearApprovalImageTimers();
+  pbApprovalImageReady = false;
+  pbSetApprovalButtonsEnabled(false);
+  image.onload = null;
+  image.onerror = null;
+  image.removeAttribute("data-id");
+  image.removeAttribute("src");
+  image.style.visibility = "hidden";
+}
+
+function pbScheduleCaptureLoadingRelease(image) {
+  if (pbCaptureLoadingReleaseTimer) return;
+  pbCaptureLoadingReleaseTimer = setTimeout(function() {
+    pbCaptureLoadingReleaseTimer = null;
+    if (!pbLastCaptureBusy && currentJobState !== "approval") {
+      pbCancelApprovalImageLoad(image);
+      pbCaptureLoadingLatched = false;
+      pbSetCaptureLoading(false);
+    }
+  }, 350);
+}
+
+function pbLoadApprovalImage(image, captureId) {
+  if (!image || !captureId) return;
+  var attempt = 0;
+  var token = ++pbApprovalLoadToken;
+  pbClearApprovalImageTimers();
+  pbApprovalImageReady = false;
+  pbSetApprovalButtonsEnabled(false);
+  pbCaptureLoadingLatched = true;
+  if (pbCaptureLoadingReleaseTimer) {
+    clearTimeout(pbCaptureLoadingReleaseTimer);
+    pbCaptureLoadingReleaseTimer = null;
+  }
+  pbSetCaptureLoading(true, "กำลังโหลดภาพสำหรับตรวจสอบ — ชัตเตอร์ถูกล็อกชั่วคราว");
+  image.style.visibility = "hidden";
+
+  function requestImage() {
+    if (token !== pbApprovalLoadToken) return;
+    attempt += 1;
+    image.setAttribute("data-id", captureId);
+    function retry() {
+      if (token !== pbApprovalLoadToken || image.getAttribute("data-id") !== captureId) return;
+      pbClearApprovalImageTimers();
+      image.onload = null;
+      image.onerror = null;
+      image.removeAttribute("src");
+      if (attempt >= 4) pbSetCaptureLoading(true, "ภาพยังไม่พร้อม ระบบกำลังลองโหลดใหม่ — โปรดรอสักครู่");
+      pbApprovalRetryTimer = setTimeout(requestImage, Math.min(150 * attempt, 600));
+    }
+    image.onload = function() {
+      if (token !== pbApprovalLoadToken || image.getAttribute("data-id") !== captureId) return;
+      if (!image.naturalWidth) { retry(); return; }
+      pbClearApprovalImageTimers();
+      image.style.visibility = "visible";
+      pbApprovalImageReady = true;
+      pbSetApprovalButtonsEnabled(true);
+      pbCaptureLoadingLatched = false;
+      pbSetCaptureLoading(false);
+    };
+    image.onerror = retry;
+    pbApprovalLoadTimer = setTimeout(retry, 1800);
+    var imagePath = "/api/processing/approval/" + encodeURIComponent(captureId) + "?t=" + Date.now();
+    // Safari can exhaust its per-host connection pool with two MJPEG previews
+    // and multiple SSE tabs. Images may then wait indefinitely behind streams.
+    // Loopback has a second host name that reaches the same local server.
+    if (location.hostname === "127.0.0.1" && attempt % 2 === 1) {
+      image.src = location.protocol + "//localhost" + (location.port ? ":" + location.port : "") + imagePath;
+    } else if (location.hostname === "localhost" && attempt % 2 === 1) {
+      image.src = location.protocol + "//127.0.0.1" + (location.port ? ":" + location.port : "") + imagePath;
+    } else {
+      image.src = imagePath;
+    }
+  }
+
+  requestImage();
+}
+
+function pbFetchStatusJson(path, timeoutMs) {
+  var controller = new AbortController();
+  var timer = setTimeout(function() { controller.abort(); }, timeoutMs);
+  return fetch(path, { cache: "no-store", signal: controller.signal })
+    .then(function(res) { if (!res.ok) throw new Error("status " + res.status); return res.json(); })
+    .finally(function() { clearTimeout(timer); });
+}
+
+function pbPollCaptureState() {
+  if (pbCaptureStateRequestInFlight) return;
+  pbCaptureStateRequestInFlight = true;
+  pbFetchStatusJson("/api/share/capture-state", 2000)
+    .then(function(state) {
+      pbLastCaptureBusy = !!state.busy;
+      if (state.busy) {
+        if (pbCaptureLoadingReleaseTimer) {
+          clearTimeout(pbCaptureLoadingReleaseTimer);
+          pbCaptureLoadingReleaseTimer = null;
+        }
+        pbCaptureLoadingLatched = true;
+        pbSetCaptureLoading(true, "กำลังรับภาพจากกล้อง — กรุณารอสักครู่");
+        syncStatus();
+      }
+    })
+    .catch(function(){})
+    .finally(function() { pbCaptureStateRequestInFlight = false; });
+}
+
+function pbConnectProcessingEvents() {
+  // The guest screen only displays approval; the operator owns the actions.
+  // A separate long-lived SSE connection on the guest screen competes with
+  // Safari's MJPEG and approval-image requests when several displays are open.
+  if (document.documentElement.dataset.pbView === "guest") return;
+  if (!("EventSource" in window)) return;
+  var events = new EventSource("/api/sse");
+  events.addEventListener("ProcessStateinfo", function() {
+    syncStatus();
+  });
+  events.onerror = function() {
+    events.close();
+    setTimeout(pbConnectProcessingEvents, 1500);
+  };
+}
+
+// Real-time Status Sync
+function syncStatus() {
+  if (pbStatusRequestInFlight) {
+    pbStatusRequestPending = true;
+    return;
+  }
+  pbStatusRequestInFlight = true;
+  pbWatchdogCameraStream();
+  pbFetchStatusJson("/api/processing/status", 2500)
+    .then(function(data) {
+      var banner = document.getElementById("pb-top-banner");
+      var bannerText = document.getElementById("pb-banner-text");
+      var finishedBar = document.getElementById("pb-finished-bar");
+      var cameraStream = document.getElementById("pb-camera-stream");
+      var approvalModal = document.getElementById("pb-approval-modal");
+      var approvalImg = document.getElementById("pb-approval-img");
+      var approvalTitleText = document.getElementById("pb-approval-title-text");
+
+      if (data && data.occupied && data.jobmodel) {
+        var jm = data.jobmodel;
+        currentJobState = data.state;
+        
+        // Reconnect camera stream whenever leaving approval state so preview is instantly live
+        if (prevJobState === "approval" && currentJobState !== "approval") {
+          window.pbApprovalImageActive = false;
+          if (cameraStream) {
+            if (window.pbCameraConnected) cameraStream.src = "/api/aquisition/stream.mjpg?t=" + Date.now();
+          }
+        }
+        prevJobState = currentJobState;
+
+        currentCapturedIds = jm.captured_ids || [];
+        var total = jm.total_captures_to_take || 3;
+        pbEnsureSlotCount(total);
+        var taken = currentCapturedIds.length;
+        var remaining = Math.max(0, total - taken);
+
+        var badge = document.getElementById("pb-progress-badge");
+        var sub = document.getElementById("pb-progress-sub");
+        if (remaining > 0) {
+          badge.className = "pb-badge";
+          badge.innerText = "ขาดอีก " + remaining + " รูป";
+          sub.innerText = "ถ่ายแล้ว " + taken + "/" + total + " รูป";
+        } else {
+          badge.className = "pb-badge completed";
+          badge.innerText = "ครบ " + total + " รูปแล้ว";
+          sub.innerText = "กำลังสร้างรูปเล่ม...";
+        }
+
+        // Finished state check
+        var isFinished = document.documentElement.dataset.pbView !== "guest" && (currentJobState === "completed" || currentJobState === "present" || window.location.hash.includes("itempresenter"));
+        if (finishedBar) {
+          if (isFinished) {
+            finishedBar.classList.remove("pb-hidden");
+          } else {
+            finishedBar.classList.add("pb-hidden");
+          }
+        }
+
+        // Live Approval Modal Control
+        if (currentJobState === "approval" && jm && jm.approval_id) {
+          window.pbApprovalImageActive = true;
+          if (cameraStream && cameraStream.getAttribute("src")) cameraStream.removeAttribute("src");
+          if (approvalModal) {
+            approvalModal.classList.remove("pb-hidden");
+          }
+          if (approvalImg) {
+            if (approvalImg.getAttribute("data-id") !== jm.approval_id) {
+              pbLoadApprovalImage(approvalImg, jm.approval_id);
+            } else if (approvalImg.complete && approvalImg.naturalWidth > 0) {
+              approvalImg.style.visibility = "visible";
+              pbApprovalImageReady = true;
+              pbSetApprovalButtonsEnabled(true);
+              pbCaptureLoadingLatched = false;
+              pbSetCaptureLoading(false);
+            }
+          }
+          if (approvalTitleText) {
+            approvalTitleText.innerText = "ตรวจดูรูปที่ " + taken + " (จาก " + total + " รูป)";
+          }
+          if (cameraStream) {
+            cameraStream.style.opacity = "0";
+          }
+          banner.className = "pb-top-banner banner-approval";
+          bannerText.innerText = document.documentElement.dataset.pbView === "guest"
+            ? "ตรวจดูรูปที่ " + taken + " — รอเจ้าหน้าที่ยืนยันจากจอควบคุม"
+            : "ตรวจดูรูปที่ " + taken + ": เลือก \"บันทึกรูปนี้\" หรือ \"ถ่ายใหม่\"";
+        } else {
+          window.pbApprovalImageActive = false;
+          if (approvalModal) {
+            approvalModal.classList.add("pb-hidden");
+          }
+          pbScheduleCaptureLoadingRelease(approvalImg);
+          if (cameraStream) {
+            cameraStream.style.opacity = isFinished ? "0" : "1";
+          }
+          if (isFinished) {
+            banner.className = "pb-top-banner banner-success";
+            bannerText.innerText = "ถ่ายครบ " + total + " รูปแล้ว — เลือกจัดเทมเพลต พิมพ์ หรือแชร์ด้านล่าง";
+          } else {
+            banner.className = "pb-top-banner";
+            var targetSlot = taken + 1;
+            bannerText.innerText = (taken ? "รูปที่ " + taken + " เรียบร้อย — " : "") + "กดชัตเตอร์รูปที่ " + targetSlot + " (" + targetSlot + "/" + total + ")";
+          }
+        }
+
+        // Slot cards
+        for (var i = 0; i < total; i++) {
+          var slotEl = document.getElementById("pb-slot-" + i);
+          var thumbEl = document.getElementById("pb-thumb-" + i);
+          var tagEl = document.getElementById("pb-tag-" + i);
+          if (!slotEl || !thumbEl || !tagEl) continue;
+
+          if (i < taken && currentCapturedIds[i]) {
+            slotEl.className = "pb-slot has-photo";
+            tagEl.className = "pb-slot-tag ready";
+            tagEl.innerText = "ผ่านแล้ว";
+            if (thumbEl.getAttribute("data-capture-id") !== currentCapturedIds[i]) {
+              thumbEl.setAttribute("data-capture-id", currentCapturedIds[i]);
+              thumbEl.innerHTML = '<img src="/api/processing/approval/' + currentCapturedIds[i] + '">';
+            }
+          } else if (i === taken && currentJobState !== "idle") {
+            slotEl.className = "pb-slot active";
+            tagEl.className = "pb-slot-tag waiting";
+            tagEl.innerText = "รอกดชัตเตอร์";
+            thumbEl.removeAttribute("data-capture-id");
+            thumbEl.innerHTML = '<span class="pb-icon" style="color:#0f172a;"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg></span>';
+          } else {
+            slotEl.className = "pb-slot";
+            tagEl.className = "pb-slot-tag";
+            tagEl.innerText = "รอถ่าย";
+            thumbEl.removeAttribute("data-capture-id");
+            thumbEl.innerHTML = '<span class="pb-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg></span>';
+          }
+        }
+      } else {
+        currentJobState = "idle";
+        window.pbApprovalImageActive = false;
+        if (prevJobState === "approval" && cameraStream && window.pbCameraConnected) {
+          cameraStream.src = "/api/aquisition/stream.mjpg?t=" + Date.now();
+        }
+        prevJobState = "idle";
+        pbScheduleCaptureLoadingRelease(approvalImg);
+        if (approvalModal) {
+          approvalModal.classList.add("pb-hidden");
+        }
+        var isFinishedHash = document.documentElement.dataset.pbView !== "guest" && window.location.hash.includes("itempresenter");
+        if (document.documentElement.dataset.pbView === "guest" && window.location.hash.includes("itempresenter")) {
+          window.location.hash = "#/";
+        }
+        if (finishedBar) {
+          if (isFinishedHash) {
+            finishedBar.classList.remove("pb-hidden");
+          } else {
+            finishedBar.classList.add("pb-hidden");
+          }
+        }
+        if (cameraStream) {
+          cameraStream.style.opacity = isFinishedHash ? "0" : "1";
+        }
+
+        document.getElementById("pb-progress-badge").className = "pb-badge";
+        document.getElementById("pb-progress-badge").innerText = "กดชัตเตอร์เพื่อเริ่ม";
+        var idleTotal = window.pbActiveCaptureCount || 3;
+        pbEnsureSlotCount(idleTotal);
+        document.getElementById("pb-progress-sub").innerText = "เทมเพลต " + idleTotal + " รูปต่อชุด";
+
+        banner.className = "pb-top-banner";
+        if (isFinishedHash) {
+          banner.className = "pb-top-banner banner-success";
+          bannerText.innerText = "ถ่ายครบแล้ว — เลือกจัดเทมเพลต พิมพ์ หรือแชร์ด้านล่าง";
+        } else {
+          bannerText.innerText = window.pbCameraConnected
+            ? "สตูดิโอพร้อมแล้ว — กดชัตเตอร์ที่กล้องเพื่อเริ่มถ่ายรูปที่ 1 (1/" + idleTotal + ")"
+            : "กล้องออฟไลน์ — ยังดูรูปและสั่งพิมพ์ภาพเก่าได้";
+        }
+
+        for (var i = 0; i < idleTotal; i++) {
+          var slotEl = document.getElementById("pb-slot-" + i);
+          var thumbEl = document.getElementById("pb-thumb-" + i);
+          var tagEl = document.getElementById("pb-tag-" + i);
+          if (!slotEl || !thumbEl || !tagEl) continue;
+          slotEl.className = "pb-slot";
+          tagEl.className = "pb-slot-tag";
+          tagEl.innerText = "รอถ่าย";
+          thumbEl.removeAttribute("data-capture-id");
+          thumbEl.innerHTML = '<span class="pb-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg></span>';
+        }
+      }
+    })
+    .catch(function(){})
+    .finally(function() {
+      pbStatusRequestInFlight = false;
+      if (pbStatusRequestPending) {
+        pbStatusRequestPending = false;
+        syncStatus();
+      }
+    });
+}
+
+// The operator receives state changes through SSE. The read-only guest screen
+// polls often enough to update promptly without holding another connection.
+var pbLastStatusPollAt = 0;
+setInterval(function() {
+  var now = Date.now();
+  var interval = document.documentElement.dataset.pbView === "guest" ? 400 : (window.pbCameraConnected ? 1000 : 2000);
+  if (now - pbLastStatusPollAt < interval) return;
+  pbLastStatusPollAt = now;
+  syncStatus();
+}, 250);
+setInterval(function() { if (window.pbCameraConnected && !document.hidden) pbPollCaptureState(); }, 500);
+pbConnectProcessingEvents();
+syncStatus();
+
+// Keyboard shortcuts for approval (1 / Enter / Space: Approve, 2 / Backspace: Retake, Escape: Close Modal)
+function pbIsModalOpen(id) {
+  var el = document.getElementById(id);
+  return !!(el && !el.classList.contains('pb-hidden'));
+}
+window.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        if (pbIsModalOpen('pb-queue-ticket-modal') || pbIsModalOpen('pb-template-editor-modal') || pbIsModalOpen('pb-template-modal') || pbIsModalOpen('pb-hardware-modal')) {
+            return;
+        }
+        if (pbIsModalOpen('pb-gallery-qr-lightbox')) {
+            pbCloseGalleryQrZoom();
+            return;
+        }
+        if (pbIsModalOpen('pb-print-picker')) {
+            var cancelBtn = document.getElementById('pb-print-picker-cancel');
+            if (cancelBtn) cancelBtn.click();
+            return;
+        }
+        if (pbIsModalOpen('pb-print-queue-modal')) {
+            pbClosePrintQueueModal();
+            return;
+        }
+        if (pbIsModalOpen('pb-viewer-modal')) {
+            pbCloseModal();
+            return;
+        }
+        if (document.documentElement.dataset.pbView === "operator" && pbIsModalOpen('pb-approval-modal')) {
+            pbCloseApprovalModal();
+            return;
+        }
+        if (pbIsModalOpen('pb-gallery-modal')) {
+            pbCloseGallery();
+        }
+        return;
+    }
+    var target = e.target;
+    var tag = target && target.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (target && target.isContentEditable)) {
+        return;
+    }
+    var hasBlockingModal = ['pb-gallery-qr-lightbox', 'pb-print-picker', 'pb-print-queue-modal', 'pb-viewer-modal', 'pb-queue-ticket-modal', 'pb-template-editor-modal', 'pb-template-modal', 'pb-hardware-modal'].some(pbIsModalOpen);
+    if (!hasBlockingModal && document.documentElement.dataset.pbView === "operator" && currentJobState === "approval" && pbIsModalOpen('pb-approval-modal')) {
+        if (e.key === '1' || e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            pbConfirmApproval();
+        } else if (e.key === '2' || e.key === 'Backspace') {
+            e.preventDefault();
+            pbRejectApproval();
+        }
+    }
+});
+
+// Enforce Pure White Buttons on Quasar approval & itempresenter buttons with colored highlight borders
+setInterval(function() {
+    // Hide abort button in approval dialog
+    var backBtn = document.querySelector('#layout-button-back');
+    if (backBtn) {
+      backBtn.style.display = 'none';
+    }
+
+    var approveBtn = document.querySelector('#item-approval-button-approve');
+    if (approveBtn && !approveBtn.getAttribute('data-white-pure')) {
+        approveBtn.setAttribute('data-white-pure', 'true');
+        approveBtn.style.background = '#ffffff';
+        approveBtn.style.color = '#16a34a';
+        approveBtn.style.border = '2px solid #16a34a';
+        approveBtn.style.height = '46px';
+        approveBtn.style.minWidth = '140px';
+        approveBtn.style.borderRadius = '10px';
+        approveBtn.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)';
+        approveBtn.style.transition = 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)';
+        var cnt = approveBtn.querySelector('.q-btn__content');
+        if (cnt) cnt.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px;"><polyline points="20 6 9 17 4 12"/></svg><span style="font-size:15px; font-weight:600;">บันทึกรูปนี้</span>';
+    }
+    var rejectBtn = document.querySelector('#item-approval-button-reject');
+    if (rejectBtn && !rejectBtn.getAttribute('data-white-pure')) {
+        rejectBtn.setAttribute('data-white-pure', 'true');
+        rejectBtn.style.background = '#ffffff';
+        rejectBtn.style.color = '#dc2626';
+        rejectBtn.style.border = '2px solid #dc2626';
+        rejectBtn.style.height = '46px';
+        rejectBtn.style.minWidth = '140px';
+        rejectBtn.style.borderRadius = '10px';
+        rejectBtn.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)';
+        rejectBtn.style.transition = 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)';
+        var cnt = rejectBtn.querySelector('.q-btn__content');
+        if (cnt) cnt.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px;"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg><span style="font-size:15px; font-weight:600;">ถ่ายใหม่</span>';
+    }
+
+    // Ensure approval image loads cleanly without staying gray
+    var approvalDialog = document.querySelector('#itemapproval-dialog');
+    if (approvalDialog) {
+        var img = approvalDialog.querySelector('img');
+        if (img && (!img.complete || img.naturalWidth === 0)) {
+            var retries = parseInt(img.getAttribute('data-retries') || '0', 10);
+            if (retries < 6) {
+                img.setAttribute('data-retries', String(retries + 1));
+                setTimeout(function() {
+                    if (img && img.naturalWidth === 0) {
+                        var base = img.src.split('?')[0];
+                        img.src = base + '?t=' + Date.now();
+                    }
+                }, 350);
+            }
+        }
+    }
+    
+    // Actively hide any old Photobooth-app toolbar or action buttons
+    var oldToolbar = document.querySelector('#gallery-toolbar');
+    if (oldToolbar) oldToolbar.style.display = 'none';
+    var oldButtons = document.querySelectorAll('.action-button, .action-buttons, .action-button-download, .action-button-delete, .action-button-share, .action-button-filter');
+    if (oldButtons && oldButtons.length > 0) {
+      oldButtons.forEach(function(b) {
+        b.style.display = 'none';
+      });
+    }
+}, 750);
+
+// Delete latest photo from finished bar
+window.pbDeleteLatest = function() {
+  fetch("/api/processing/status")
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      var latestId = (data.jobmodel && data.jobmodel.present_mediaitem_id) ||
+                     (galleryItems[0] && galleryItems[0].id);
+      if (latestId) {
+        if (confirm("คุณต้องการลบรูปภาพนี้ใช่หรือไม่?")) {
+          fetch("/api/mediacollection/" + encodeURIComponent(latestId), { method: "DELETE" })
+            .then(function(res) { return pbAssertOk(res, "เกิดข้อผิดพลาดในการลบ"); })
+            .then(function() {
+              pbShowToast("ลบรูปภาพเรียบร้อยแล้ว", 2500);
+              pbRestartShooting();
+              pbUpdateGalleryCount();
+            })
+            .catch(function(err) {
+              pbShowToast(err && err.message ? err.message : "เกิดข้อผิดพลาดในการลบ", 2500);
+            });
+        }
+      }
+    })
+    .catch(function(){});
+};
+
+// The guest display never uses the gallery or print queue. Keep those requests
+// off its connection pool so the next approval photo gets priority.
+if (document.documentElement.dataset.pbView !== "guest") {
+  setInterval(function() { if (!document.hidden) pbFetchPrintQueue(); }, 8000);
+  pbFetchPrintQueue();
+}
+
+var pbOfflineModeState = false;
+function pbApplyOfflineButton(enabled) {
+  pbOfflineModeState = !!enabled;
+  var btn = document.getElementById("pb-offline-toggle");
+  if (!btn) return;
+  btn.classList.toggle("is-offline", pbOfflineModeState);
+  btn.textContent = pbOfflineModeState ? "โหมดออฟไลน์" : "ออนไลน์";
+  btn.setAttribute("aria-pressed", pbOfflineModeState ? "true" : "false");
+}
+window.pbSyncOfflineMode = function() {
+  if (document.documentElement.dataset.pbView !== "operator") return;
+  fetch("/api/share/offline-mode", { cache: "no-store" })
+    .then(function(res) { return res.ok ? res.json() : null; })
+    .then(function(data) { if (data) pbApplyOfflineButton(data.offline_mode); })
+    .catch(function(){});
+};
+window.pbToggleOfflineMode = function() {
+  var btn = document.getElementById("pb-offline-toggle");
+  if (btn) btn.disabled = true;
+  fetch("/api/share/offline-mode", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ offline_mode: !pbOfflineModeState })
+  })
+    .then(function(res) { return pbAssertOk(res, "สลับโหมดออฟไลน์ไม่สำเร็จ"); })
+    .then(function(data) {
+      pbApplyOfflineButton(data.offline_mode);
+      pbShowToast(
+        data.offline_mode
+          ? "เปิดโหมดออฟไลน์แล้ว · ทำงานต่อได้โดยไม่ต้องใช้ Wi-Fi"
+          : "ปิดโหมดออฟไลน์แล้ว · กลับมาอัปโหลด QR ออนไลน์อัตโนมัติ",
+        3500
+      );
+    })
+    .catch(function(err) {
+      pbShowToast(err && err.message ? err.message : "สลับโหมดออฟไลน์ไม่สำเร็จ", 3000);
+    })
+    .finally(function() { if (btn) btn.disabled = false; });
+};
+if (document.documentElement.dataset.pbView === "operator") {
+  pbSyncOfflineMode();
+  setInterval(function() { if (!document.hidden) pbSyncOfflineMode(); }, 15000);
+}
+</script>
+<script src="/assets/photobooth-enhancements.js?v=offline-fast-25691124"></script>
+<script src="/assets/photobooth-dual-screen.js?v=offline-fast-25691124"></script>
+<script src="/assets/photobooth-guest-queue.js?v=offline-fast-25691124"></script>
+</body></html>

@@ -1,0 +1,1123 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ศูนย์ควบคุมบูธถ่ายภาพ</title>
+  <link rel="stylesheet" href="/assets/photobooth-theme.css?v=loy-2569" />
+  <script src="/assets/photobooth-loykrathong-scene.js?v=lk-scene-1" defer></script>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: var(--pb-font-sans);
+      background:
+        radial-gradient(circle at 12% 0%, rgba(251, 191, 36, 0.14), transparent 42%),
+        radial-gradient(circle at 90% 8%, rgba(217, 119, 6, 0.08), transparent 36%),
+        var(--pb-light-bg);
+      color: var(--pb-light-ink);
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 24px;
+      background: var(--pb-light-header);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--pb-light-border-ink);
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+    .brand { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .brand h1 { margin: 0; font-size: 1.2rem; font-weight: 800; color: var(--pb-light-ink); letter-spacing: -0.01em; }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 11px;
+      border-radius: 999px;
+      font-size: 0.76rem;
+      font-weight: 700;
+      border: 1px solid var(--pb-light-border-ink);
+      background: #fffdf9;
+      color: var(--pb-light-secondary);
+    }
+    .badge.ok { border-color: var(--pb-emerald-border); color: var(--pb-emerald-ink); background: var(--pb-emerald-soft); }
+    .badge.warn { border-color: rgba(217, 119, 6, 0.35); color: #92400e; background: #fef3c7; }
+    .badge.fail { border-color: var(--pb-rose-border); color: var(--pb-rose-ink); background: var(--pb-rose-soft); }
+    nav { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    nav a {
+      color: var(--pb-light-ink);
+      text-decoration: none;
+      padding: 7px 14px;
+      border-radius: 999px;
+      font-size: 0.84rem;
+      font-weight: 700;
+      background: #fffdf9;
+      border: 1px solid var(--pb-light-border-ink);
+      box-shadow: 0 2px 6px rgba(35, 25, 18, 0.05);
+      transition: background 0.16s ease, border-color 0.16s ease;
+    }
+    nav a.active {
+      background: var(--pb-espresso);
+      border-color: var(--pb-espresso);
+      color: var(--pb-dark-ink);
+    }
+    nav a:hover:not(.active) { background: var(--pb-light-sand-hover); border-color: rgba(180, 83, 9, 0.35); }
+    .container { max-width: 1380px; margin: 0 auto; padding: 20px 24px 44px; display: grid; gap: 18px; }
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px 16px;
+      background: var(--pb-glass-light);
+      backdrop-filter: blur(18px);
+      border: 1px solid var(--pb-light-border);
+      border-radius: 20px;
+      box-shadow: var(--pb-light-card-shadow);
+    }
+    .token-box { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    input, select, textarea {
+      background: #fffdf9;
+      color: var(--pb-light-ink);
+      border: 1px solid rgba(120, 53, 15, 0.22);
+      border-radius: 12px;
+      padding: 8px 12px;
+      font-size: 0.86rem;
+      font-family: inherit;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: #b45309;
+      box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.2);
+    }
+    button {
+      background: #fffdf9;
+      color: var(--pb-light-ink);
+      border: 1px solid rgba(120, 53, 15, 0.2);
+      border-radius: 12px;
+      padding: 8px 14px;
+      font-size: 0.84rem;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(35, 25, 18, 0.05);
+      transition: transform 0.14s var(--pb-ease-out), background 0.16s ease, border-color 0.16s ease;
+    }
+    button:hover:not(:disabled) { background: var(--pb-light-sand-hover); border-color: rgba(180, 83, 9, 0.35); }
+    button:disabled { opacity: 0.55; cursor: not-allowed; }
+    button.primary {
+      background: var(--pb-gold-grad);
+      border-color: rgba(217, 119, 6, 0.35);
+      color: var(--pb-light-ink);
+      font-weight: 800;
+      box-shadow: var(--pb-gold-glow);
+    }
+    button.primary:hover:not(:disabled) { background: var(--pb-gold-grad-hover); }
+    button.ok { background: var(--pb-emerald); border-color: var(--pb-emerald); color: #fff; }
+    button.ok:hover:not(:disabled) { background: #047857; }
+    button.danger { background: var(--pb-rose-soft); border-color: var(--pb-rose-border); color: var(--pb-rose-ink); }
+    button.danger:hover:not(:disabled) { background: var(--pb-rose); border-color: var(--pb-rose); color: #fff; }
+    #export-csv-btn {
+      background: var(--pb-espresso);
+      border-color: var(--pb-espresso);
+      color: var(--pb-dark-ink);
+      box-shadow: 0 6px 16px rgba(36, 25, 17, 0.18);
+    }
+    #export-csv-btn:hover:not(:disabled) { background: #3b2a1e; }
+    .tabs {
+      display: inline-flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 6px;
+      border-radius: 999px;
+      background: var(--pb-light-sand-track);
+      border: 1px solid var(--pb-light-border-ink);
+      width: fit-content;
+      max-width: 100%;
+    }
+    .tab-btn {
+      background: transparent;
+      border: none;
+      border-radius: 999px;
+      padding: 8px 16px;
+      color: var(--pb-light-secondary);
+      box-shadow: none;
+    }
+    .tab-btn:hover:not(.active) { background: rgba(255, 253, 249, 0.65); color: var(--pb-light-ink); }
+    .tab-btn.active {
+      background: var(--pb-espresso);
+      color: var(--pb-dark-ink);
+      box-shadow: 0 4px 12px rgba(36, 25, 17, 0.18);
+    }
+    .tab-panel { display: none; gap: 18px; }
+    .tab-panel.active { display: grid; animation: uiStep 0.22s var(--pb-ease-out) both; }
+    .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(195px, 1fr)); gap: 14px; }
+    .metric {
+      background: var(--pb-light-card);
+      border: 1px solid var(--pb-light-border);
+      border-radius: 22px;
+      padding: 16px 18px;
+      box-shadow: var(--pb-light-card-shadow);
+    }
+    .metric-label { color: var(--pb-light-muted); font-size: 0.8rem; font-weight: 600; }
+    .metric-value { font-size: 1.5rem; font-weight: 800; margin-top: 4px; color: var(--pb-light-ink); }
+    .metric-sub { color: var(--pb-light-muted); font-size: 0.78rem; margin-top: 4px; }
+    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(460px, 1fr)); gap: 18px; }
+    @media (max-width: 560px) { .grid-2 { grid-template-columns: 1fr; } }
+    .card {
+      background: var(--pb-glass-light);
+      backdrop-filter: blur(22px) saturate(155%);
+      -webkit-backdrop-filter: blur(22px) saturate(155%);
+      border: 1px solid var(--pb-light-border);
+      border-radius: 24px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      box-shadow: var(--pb-light-shadow);
+      animation: uiCard 0.26s var(--pb-ease-out) both;
+    }
+    .card-header { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+    .card-header h2 { margin: 0; font-size: 1.05rem; font-weight: 800; color: var(--pb-light-ink); }
+    .list { display: flex; flex-direction: column; gap: 10px; max-height: 380px; overflow-y: auto; }
+    .row {
+      background: #fffdf9;
+      border: 1px solid var(--pb-light-border-ink);
+      border-radius: 16px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      box-shadow: 0 2px 8px rgba(35, 25, 18, 0.04);
+    }
+    .row:hover { background: var(--pb-light-sand-hover); }
+    .row-main { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1 1 220px; }
+    .row-title { font-weight: 700; font-size: 0.92rem; word-break: break-word; color: var(--pb-light-ink); }
+    .row-sub { color: var(--pb-light-muted); font-size: 0.78rem; word-break: break-word; }
+    .row-actions { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+    .field { display: flex; flex-direction: column; gap: 5px; }
+    .field label { font-size: 0.78rem; font-weight: 600; color: var(--pb-light-secondary); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid rgba(146, 64, 14, 0.12); vertical-align: top; word-break: break-word; }
+    th { color: var(--pb-light-secondary); font-weight: 700; background: var(--pb-light-sand); }
+    tbody tr:hover { background: var(--pb-light-sand-hover); }
+    .table-wrap { max-height: 420px; overflow: auto; border: 1px solid var(--pb-light-border-ink); border-radius: 16px; background: #fffdf9; }
+    .status-msg { padding: 11px 16px; border-radius: 14px; border: 1px solid var(--pb-light-border-ink); background: #fffdf9; font-size: 0.88rem; font-weight: 600; display: none; }
+    .status-msg.show { display: block; animation: uiFade 0.18s var(--pb-ease-out) both; }
+    .status-msg.ok { border-color: var(--pb-emerald-border); color: var(--pb-emerald-ink); background: var(--pb-emerald-soft); }
+    .status-msg.fail { border-color: var(--pb-rose-border); color: var(--pb-rose-ink); background: var(--pb-rose-soft); }
+    .empty { color: var(--pb-light-muted); font-size: 0.86rem; padding: 10px 0; }
+  </style>
+</head>
+<body data-lk-scene="parchment-river">
+  <header class="pb-admin-header">
+    <div class="pb-admin-header-inner">
+      <div class="pb-admin-header-top">
+        <div class="pb-admin-title-group">
+          <a href="/?view=operator#/" class="pb-pill-action">
+            <svg class="pb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+            กลับหน้าจอถ่าย
+          </a>
+          <div class="pb-admin-title-text">
+            <h1>ศูนย์ควบคุมบูธถ่ายภาพ</h1>
+            <p>สโมสรนักศึกษาคณะวิทยาศาสตร์ มหาวิทยาลัยสงขลานครินทร์ · ควบคุมคิว กล้อง พิมพ์ และ QR แบบเรียลไทม์</p>
+          </div>
+        </div>
+        <div class="pb-admin-badges">
+          <span id="sse-badge" class="badge warn">โหมด Polling</span>
+          <span id="event-badge" class="badge">กำลังโหลด Event...</span>
+          <span id="last-sync" class="badge">กำลังโหลด...</span>
+        </div>
+      </div>
+      <nav class="pb-admin-action-bar" aria-label="แถบเครื่องมือหลัก">
+        <a href="/control-center.html" class="pb-pill-action is-active">
+          <svg class="pb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+          ศูนย์ควบคุม
+        </a>
+        <a href="/kiosk.html" target="_blank" rel="noopener" class="pb-pill-action">
+          <svg class="pb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+          ตู้ถ่ายเอง (Kiosk) ↗
+        </a>
+        <a href="/print-desk.html" class="pb-pill-action">
+          <svg class="pb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
+          โต๊ะพิมพ์ภาพ
+        </a>
+        <a href="/queue-board.html" target="_blank" rel="noopener" class="pb-pill-action">
+          <svg class="pb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></svg>
+          จอคิว ↗
+        </a>
+        <a href="/queue-admin.html" class="pb-pill-action">
+          <svg class="pb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          จัดการคิว
+        </a>
+        <button id="toggle-intake-btn" type="button" class="pb-pill-action">
+          <svg class="pb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2v10"/><path d="M18.4 6.6a9 9 0 1 1-12.77.04"/></svg>
+          เปิด/ปิดรับคิว
+        </button>
+        <button id="toggle-offline-btn" type="button" class="pb-pill-action">โหมด: ออนไลน์</button>
+        <button id="refresh-all-btn" type="button" class="pb-pill-action">
+          <svg class="pb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
+          รีเฟรชข้อมูล
+        </button>
+        <button id="recheck-preflight-btn" type="button" class="pb-pill-action is-gold">
+          <svg class="pb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>
+          ตรวจความพร้อมใหม่
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <div id="banner" class="status-msg" role="status" aria-live="polite"></div>
+
+    <div class="toolbar">
+      <div class="token-box">
+        <svg class="pb-icon" style="color:#b45309;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <label for="admin-token-input" style="font-size:0.84rem;color:var(--pb-light-secondary);font-weight:700;">Admin Token (สำหรับ LAN):</label>
+        <input id="admin-token-input" type="password" placeholder="วาง X-Admin-Token" autocomplete="off" />
+        <button id="save-token-btn" type="button">บันทึก Token</button>
+        <button id="clear-token-btn" type="button" class="danger">ล้าง</button>
+      </div>
+    </div>
+
+    <div class="tabs pb-stepper-track pb-stepper-track--light" role="tablist">
+      <button type="button" class="tab-btn active" data-tab="overview">ภาพรวมระบบ</button>
+      <button type="button" class="tab-btn" data-tab="events">งานและนโยบาย</button>
+      <button type="button" class="tab-btn" data-tab="queue">คิวและงานพิมพ์</button>
+      <button type="button" class="tab-btn" data-tab="cloud">ลิงก์แชร์ภาพ</button>
+      <button type="button" class="tab-btn" data-tab="analytics">สถิติ</button>
+      <button type="button" class="tab-btn" data-tab="audit">ประวัติการใช้งาน</button>
+    </div>
+
+    <section id="tab-overview" class="tab-panel active">
+      <section class="metrics" aria-label="ภาพรวมระบบ">
+        <div class="metric pb-kpi-card">
+          <div class="pb-kpi-head">
+            <div class="metric-label">สถานะระบบโดยรวม</div>
+            <div class="pb-kpi-icon emerald" aria-hidden="true">
+              <svg class="pb-icon pb-icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"/></svg>
+            </div>
+          </div>
+          <div id="m-health" class="metric-value">-</div>
+          <div id="m-platform-db" class="metric-sub">Platform DB: -</div>
+        </div>
+        <div class="metric pb-kpi-card">
+          <div class="pb-kpi-head">
+            <div class="metric-label">คิวที่กำลังใช้งาน</div>
+            <div class="pb-kpi-icon espresso" aria-hidden="true">
+              <svg class="pb-icon pb-icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg>
+            </div>
+          </div>
+          <div id="m-active-queue" class="metric-value">-</div>
+          <div id="m-queue-sub" class="metric-sub">กำลังโหลด...</div>
+        </div>
+        <div class="metric pb-kpi-card">
+          <div class="pb-kpi-head">
+            <div class="metric-label">งานพิมพ์รอตรวจสอบ (Unknown)</div>
+            <div class="pb-kpi-icon rose" aria-hidden="true">
+              <svg class="pb-icon pb-icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
+            </div>
+          </div>
+          <div id="m-unknown-jobs" class="metric-value">0</div>
+          <div class="metric-sub">ต้องยืนยันด้วยมือ ห้ามสั่งพิมพ์ซ้ำอัตโนมัติ</div>
+        </div>
+        <div class="metric pb-kpi-card">
+          <div class="pb-kpi-head">
+            <div class="metric-label">คิวอัปโหลดคลาวด์ (Outbox)</div>
+            <div class="pb-kpi-icon" aria-hidden="true">
+              <svg class="pb-icon pb-icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
+            </div>
+          </div>
+          <div id="m-outbox" class="metric-value">0</div>
+          <div id="m-outbox-sub" class="metric-sub">รอส่ง / ล้มเหลว / สำเร็จ</div>
+        </div>
+      </section>
+
+      <section class="grid-2">
+        <article class="card">
+          <div class="card-header">
+            <h2>ความพร้อมของระบบ (Preflight Checks)</h2>
+            <span id="preflight-summary" class="badge">-</span>
+          </div>
+          <div id="preflight-list" class="list"></div>
+        </article>
+
+        <article class="card">
+          <div class="card-header">
+            <h2>งานพิมพ์ค้างตรวจสอบ (Unknown) &amp; คิวล่าสุด</h2>
+            <span id="overview-queue-badge" class="badge">-</span>
+          </div>
+          <div class="pb-callout-cream">
+            <svg class="pb-icon" style="color:#b45309;margin-top:2px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg>
+            <span>นโยบายความปลอดภัย: หากงานพิมพ์ค้างเป็น <strong>unknown</strong> ระบบจะไม่พิมพ์ซ้ำอัตโนมัติ ต้องให้เจ้าหน้าที่ตรวจกระดาษและกดยืนยันด้วยมือเท่านั้น</span>
+          </div>
+          <div id="overview-unknown-list" class="list"></div>
+        </article>
+      </section>
+    </section>
+
+    <section id="tab-events" class="tab-panel">
+      <section class="grid-2">
+        <article class="card">
+          <div class="card-header">
+            <h2>พื้นที่งาน (Event Workspaces)</h2>
+            <span id="events-count-badge" class="badge">-</span>
+          </div>
+          <div class="row-actions">
+            <input id="new-event-name" type="text" placeholder="ชื่องานใหม่ เช่น งานรับปริญญา 2569" style="flex:1 1 200px;" />
+            <select id="new-event-mode">
+              <option value="event">Event Mode (มีเจ้าหน้าที่)</option>
+              <option value="self_service">Self-Service (ถ่ายเอง)</option>
+              <option value="kiosk">Managed Kiosk (ฟรี)</option>
+            </select>
+            <button id="create-event-btn" class="primary" type="button">สร้างงานใหม่</button>
+            <button id="clone-event-btn" type="button">โคลนจากงานปัจจุบัน</button>
+          </div>
+          <div id="events-list" class="list"></div>
+        </article>
+
+        <article class="card">
+          <div class="card-header">
+            <h2>นโยบายของ Event ที่เปิดใช้งาน</h2>
+            <span id="policy-event-name" class="badge ok">-</span>
+          </div>
+          <div class="form-grid">
+            <div class="field">
+              <label for="pol-mode">โหมดการทำงาน</label>
+              <select id="pol-mode">
+                <option value="event">Event Mode</option>
+                <option value="self_service">Self-Service</option>
+                <option value="kiosk">Managed Kiosk</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="pol-intake">การรับคิว / เซสชัน</label>
+              <select id="pol-intake">
+                <option value="true">เปิดรับ (Open)</option>
+                <option value="false">ปิดชั่วคราว (Closed)</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="pol-retake">สิทธิ์ถ่ายใหม่สูงสุด (ครั้ง)</label>
+              <input id="pol-retake" type="number" min="0" max="10" />
+            </div>
+            <div class="field">
+              <label for="pol-idle">เวลา Idle Reset ของ Kiosk (วินาที)</label>
+              <input id="pol-idle" type="number" min="10" max="600" />
+            </div>
+            <div class="field">
+              <label for="pol-cooldown">Cooldown ระหว่างรอบ Kiosk (วินาที)</label>
+              <input id="pol-cooldown" type="number" min="0" max="300" />
+            </div>
+            <div class="field">
+              <label for="pol-retention">อายุเก็บภาพ/ลิงก์แชร์ (วัน)</label>
+              <input id="pol-retention" type="number" min="1" max="365" />
+            </div>
+            <div class="field">
+              <label for="pol-lang">ภาษาเริ่มต้นของ Kiosk</label>
+              <select id="pol-lang">
+                <option value="th">ไทย (TH)</option>
+                <option value="en">English (EN)</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label for="pol-brand-title">ข้อความต้อนรับบนหน้าจอ Kiosk</label>
+            <input id="pol-brand-title" type="text" />
+          </div>
+          <div class="field">
+            <label for="pol-brand-subtitle">คำบรรยายใต้ชื่อหน้าแรก Kiosk</label>
+            <input id="pol-brand-subtitle" type="text" />
+          </div>
+          <div class="field">
+            <label for="pol-privacy">ข้อความแจ้งความเป็นส่วนตัว (Privacy Notice)</label>
+            <input id="pol-privacy" type="text" />
+          </div>
+          <div class="row-actions">
+            <button id="save-policy-btn" class="primary" type="button">บันทึกนโยบาย Event</button>
+          </div>
+        </article>
+      </section>
+
+      <article class="card">
+        <div class="card-header">
+          <h2>จัดการอายุข้อมูล (Retention Preview &amp; Purge)</h2>
+          <span id="retention-badge" class="badge">-</span>
+        </div>
+        <div class="row-actions">
+          <button id="preview-retention-btn" type="button">ตรวจรายการครบอายุ (Dry-run)</button>
+          <button id="purge-retention-btn" class="danger" type="button">ลบภาพครบกำหนดและยกเลิก Token หมดอายุ</button>
+        </div>
+        <div id="retention-summary" class="pb-callout-cream">
+          <svg class="pb-icon" style="color:#b45309;margin-top:2px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+          <span>กดปุ่มเพื่อตรวจรายการที่เข้าเกณฑ์ (ภาพที่กำลังพิมพ์หรือติดสถานะ unknown จะถูกคุ้มครองอัตโนมัติ)</span>
+        </div>
+      </article>
+    </section>
+
+    <section id="tab-queue" class="tab-panel">
+      <article class="card">
+        <div class="card-header">
+          <h2>งานพิมพ์ &amp; คิวที่รอตรวจสอบทั้งหมด</h2>
+          <span id="queue-summary" class="badge">-</span>
+        </div>
+        <div id="unknown-jobs-list" class="list"></div>
+        <div id="active-queue-list" class="list"></div>
+      </article>
+    </section>
+
+    <section id="tab-cloud" class="tab-panel">
+      <section class="grid-2">
+        <article class="card">
+          <div class="card-header">
+            <h2>คิวอัปโหลดคลาวด์ (Durable Outbox)</h2>
+            <span id="outbox-summary" class="badge">-</span>
+          </div>
+          <div id="outbox-list" class="list"></div>
+        </article>
+
+        <article class="card">
+          <div class="card-header">
+            <h2>Personal QR Share Tokens</h2>
+            <span id="tokens-summary" class="badge">-</span>
+          </div>
+          <div id="tokens-list" class="list"></div>
+        </article>
+      </section>
+    </section>
+
+    <section id="tab-analytics" class="tab-panel">
+      <section class="metrics">
+        <div class="metric">
+          <div class="metric-label">เซสชันทั้งหมด / เสร็จสมบูรณ์</div>
+          <div id="an-sessions" class="metric-value">0 / 0</div>
+          <div id="an-kiosk-sub" class="metric-sub">Kiosk: 0</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">งานพิมพ์ส่งเข้าคิว / Unknown</div>
+          <div id="an-prints" class="metric-value">0 / 0</div>
+          <div id="an-reprints" class="metric-sub">พิมพ์ซ้ำ: 0</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">ประมาณการใช้กระดาษ (แผ่น)</div>
+          <div id="an-paper" class="metric-value">0</div>
+          <div id="an-paper-note" class="metric-sub">ค่าประมาณจากงานพิมพ์</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Share Token ใช้งานอยู่ / หมดอายุ</div>
+          <div id="an-tokens" class="metric-value">0 / 0</div>
+          <div class="metric-sub">ลิงก์ QR ส่วนตัว</div>
+        </div>
+      </section>
+
+      <article class="card">
+        <div class="card-header">
+          <h2>สถิติแยกตามเทมเพลต &amp; ส่งออกรายงาน</h2>
+          <button id="export-csv-btn" class="primary" type="button">ดาวน์โหลดรายงาน CSV</button>
+        </div>
+        <div id="an-templates-list" class="list"></div>
+      </article>
+    </section>
+
+    <section id="tab-audit" class="tab-panel">
+      <article class="card">
+        <div class="card-header">
+          <h2>บันทึกเหตุการณ์ล่าสุด (Audit Log)</h2>
+          <span id="audit-summary" class="badge">-</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>เวลา</th>
+                <th>เหตุการณ์</th>
+                <th>เป้าหมาย</th>
+                <th>ผู้ดำเนินการ / รายละเอียด</th>
+              </tr>
+            </thead>
+            <tbody id="audit-tbody"></tbody>
+          </table>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <script>
+    (function () {
+      var TOKEN_STORAGE_KEY = "pb_control_center_admin_token";
+      var pollTimer = null;
+      var refreshing = false;
+      var pendingRefresh = false;
+      var currentActiveEvent = null;
+      var currentOfflineMode = false;
+
+      var sseBadge = document.getElementById("sse-badge");
+      var eventBadge = document.getElementById("event-badge");
+      var lastSyncEl = document.getElementById("last-sync");
+      var bannerEl = document.getElementById("banner");
+      var tokenInput = document.getElementById("admin-token-input");
+      var toggleOfflineBtn = document.getElementById("toggle-offline-btn");
+
+      function getAdminToken() {
+        try { return (localStorage.getItem(TOKEN_STORAGE_KEY) || "").trim(); } catch (_err) { return ""; }
+      }
+      function setAdminToken(val) {
+        try { if (val) localStorage.setItem(TOKEN_STORAGE_KEY, val); else localStorage.removeItem(TOKEN_STORAGE_KEY); } catch (_err) {}
+      }
+      tokenInput.value = getAdminToken();
+
+      function makeIdempotencyKey(prefix) {
+        if (window.crypto && typeof window.crypto.randomUUID === "function") return prefix + "-" + window.crypto.randomUUID();
+        return prefix + "-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 10);
+      }
+
+      function showBanner(msg, kind) {
+        bannerEl.textContent = msg;
+        bannerEl.className = "status-msg show " + (kind === "fail" ? "fail" : "ok");
+      }
+
+      function clearNode(node) { while (node.firstChild) node.removeChild(node.firstChild); }
+
+      function el(tag, className, text) {
+        var node = document.createElement(tag);
+        if (className) node.className = className;
+        if (text !== undefined && text !== null) node.textContent = String(text);
+        return node;
+      }
+
+      function statusBadgeClass(status) {
+        var s = String(status || "").toLowerCase();
+        if (s === "ok" || s === "pass" || s === "ready" || s === "printed" || s === "active" || s === "finalized") return "ok";
+        if (s === "fail" || s === "failed" || s === "error" || s === "unknown" || s === "canceled") return "fail";
+        return "warn";
+      }
+
+      function formatTime(val) {
+        if (!val) return "-";
+        try {
+          var d = typeof val === "number" ? new Date(val > 1e12 ? val : val * 1000) : new Date(val);
+          return isNaN(d.getTime()) ? String(val) : d.toLocaleTimeString("th-TH", { hour12: false });
+        } catch (_err) { return String(val); }
+      }
+
+      async function api(path, options) {
+        var opts = Object.assign({ cache: "no-store" }, options || {});
+        var headers = Object.assign({}, opts.headers || {});
+        var token = getAdminToken();
+        if (token) headers["X-Admin-Token"] = token;
+        opts.headers = headers;
+        var res = await fetch(path, opts);
+        var data = await res.json().catch(function () { return {}; });
+        if (!res.ok) {
+          var detail = data && data.detail ? (typeof data.detail === "string" ? data.detail : JSON.stringify(data.detail)) : ("HTTP " + res.status);
+          throw new Error(detail);
+        }
+        return data;
+      }
+
+      document.querySelectorAll(".tab-btn").forEach(function (btn) {
+        btn.onclick = function () {
+          var target = btn.getAttribute("data-tab");
+          document.querySelectorAll(".tab-btn").forEach(function (b) { b.classList.toggle("active", b === btn); });
+          document.querySelectorAll(".tab-panel").forEach(function (p) { p.classList.toggle("active", p.id === "tab-" + target); });
+        };
+      });
+
+      function renderHealthAndPreflight(healthData, preflightData) {
+        var list = document.getElementById("preflight-list");
+        var summaryBadge = document.getElementById("preflight-summary");
+        var mHealth = document.getElementById("m-health");
+        var mPlatformDb = document.getElementById("m-platform-db");
+        clearNode(list);
+
+        var checks = Array.isArray(preflightData && preflightData.checks) ? preflightData.checks : [];
+        var summary = (preflightData && preflightData.summary) || {};
+        var okCount = Number(summary.ok || 0);
+        var warnCount = Number(summary.warning || 0);
+        var failCount = Number(summary.fail || 0);
+
+        checks.forEach(function (chk) {
+          var st = String(chk.status || "warning").toLowerCase();
+          var row = el("div", "row");
+          var main = el("div", "row-main");
+          main.appendChild(el("div", "row-title", chk.label || chk.id || "check"));
+          main.appendChild(el("div", "row-sub", chk.detail || ""));
+          row.appendChild(main);
+          row.appendChild(el("span", "badge " + statusBadgeClass(st), { ok: "ผ่าน", warning: "คำเตือน", fail: "ไม่ผ่าน" }[st] || "ไม่ทราบสถานะ"));
+          list.appendChild(row);
+        });
+        if (!checks.length) list.appendChild(el("div", "empty", "ไม่มีรายการตรวจความพร้อม"));
+
+        mHealth.textContent = !preflightData ? "ยังตรวจความพร้อมไม่ได้" : (preflightData.ready_for_event ? "พร้อมเปิดงาน" : "ยังไม่พร้อมเปิดงาน");
+        if (preflightData && typeof preflightData.ready_to_capture === "boolean") {
+          mHealth.textContent += " · " + (preflightData.ready_to_capture ? "ถ่ายได้" : "ถ่ายไม่ได้")
+            + " · " + (preflightData.ready_to_print ? "พิมพ์ภาพเดิมได้" : "ยังพิมพ์ไม่ได้");
+        }
+        var dbOk = healthData ? healthData.platform_db_ok : undefined;
+        var mainOk = healthData ? healthData.database_ok : undefined;
+        mPlatformDb.textContent = "Platform WAL: " + (dbOk === true ? "ปกติ" : (dbOk === false ? "ผิดปกติ" : "-")) + " | Main DB: " + (mainOk === true ? "ปกติ" : (mainOk === false ? "ผิดปกติ" : "-"));
+        if (healthData && typeof healthData.offline_mode === "boolean") {
+          currentOfflineMode = healthData.offline_mode;
+          if (toggleOfflineBtn) {
+            toggleOfflineBtn.textContent = currentOfflineMode ? "โหมด: ออฟไลน์ (ไม่พึ่ง Wi-Fi)" : "โหมด: ออนไลน์";
+            toggleOfflineBtn.classList.toggle("is-gold", currentOfflineMode);
+          }
+        }
+        summaryBadge.textContent = "ผ่าน " + okCount + " | เตือน " + warnCount + " | ไม่ผ่าน " + failCount;
+        summaryBadge.className = "badge " + (failCount > 0 ? "fail" : (warnCount > 0 ? "warn" : "ok"));
+      }
+
+      function resolveUnknownJob(job, outcome, btn) {
+        btn.disabled = true;
+        api("/api/share/guest-queue/print-jobs/resolve", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Idempotency-Key": makeIdempotencyKey("resolve") },
+          body: JSON.stringify({
+            queue_code: job.queue_code || "",
+            outcome: outcome,
+            print_job_id: job.print_job_id || null,
+            cups_id: job.cups_id || null,
+            reason: "ยืนยันจากศูนย์ควบคุม"
+          })
+        }).then(function () {
+          showBanner("อัปเดตคิว " + (job.queue_code || "") + " เป็น " + outcome + " แล้ว", "ok");
+          refreshAll();
+        }).catch(function (err) {
+          showBanner("แก้สถานะงานพิมพ์ไม่สำเร็จ: " + err.message, "fail");
+          btn.disabled = false;
+        });
+      }
+
+      function buildUnknownRow(job) {
+        var row = el("div", "row");
+        var main = el("div", "row-main");
+        main.appendChild(el("div", "row-title", "งานพิมพ์ค้างตรวจสอบ: คิว " + (job.queue_code || "-") + (job.cups_id ? " (" + job.cups_id + ")" : "")));
+        main.appendChild(el("div", "row-sub", "Job: " + (job.print_job_id || "-") + (job.printer ? " | เครื่อง: " + job.printer : "")));
+        row.appendChild(main);
+        var actions = el("div", "row-actions");
+        var printedBtn = el("button", "ok", "ยืนยันว่าพิมพ์ออกแล้ว");
+        printedBtn.type = "button";
+        printedBtn.onclick = function () { resolveUnknownJob(job, "printed", printedBtn); };
+        var cancelBtn = el("button", "danger", "ยกเลิกงานนี้");
+        cancelBtn.type = "button";
+        cancelBtn.onclick = function () { resolveUnknownJob(job, "canceled", cancelBtn); };
+        actions.appendChild(printedBtn);
+        actions.appendChild(cancelBtn);
+        row.appendChild(actions);
+        return row;
+      }
+
+      function renderQueue(guestQueueData, printQueueData, healthData) {
+        var unknownList = document.getElementById("unknown-jobs-list");
+        var overviewUnknownList = document.getElementById("overview-unknown-list");
+        var activeList = document.getElementById("active-queue-list");
+        var summaryBadge = document.getElementById("queue-summary");
+        var overviewBadge = document.getElementById("overview-queue-badge");
+        var mActive = document.getElementById("m-active-queue");
+        var mQueueSub = document.getElementById("m-queue-sub");
+        var mUnknown = document.getElementById("m-unknown-jobs");
+
+        clearNode(unknownList);
+        clearNode(overviewUnknownList);
+        clearNode(activeList);
+
+        var unknownJobs = Array.isArray(printQueueData && printQueueData.unknown_print_jobs) ? printQueueData.unknown_print_jobs : [];
+        var cupsJobs = Array.isArray(printQueueData && printQueueData.queue) ? printQueueData.queue : [];
+        var entries = Array.isArray(guestQueueData && guestQueueData.entries) ? guestQueueData.entries : [];
+        var activeCode = (guestQueueData && guestQueueData.active_code) || (healthData && healthData.active_queue_code) || null;
+
+        var waitingCount = entries.filter(function (e) { return e.status === "waiting"; }).length;
+        var shootingCount = entries.filter(function (e) { return e.status === "shooting"; }).length;
+        var printingCount = entries.filter(function (e) { return e.status === "printing"; }).length;
+
+        mUnknown.textContent = String(unknownJobs.length);
+        mActive.textContent = activeCode || "ว่าง";
+        mQueueSub.textContent = "รอคิว: " + waitingCount + " | กำลังถ่าย: " + shootingCount + " | กำลังพิมพ์: " + printingCount;
+        summaryBadge.textContent = "Unknown: " + unknownJobs.length + " | CUPS ค้าง: " + cupsJobs.length;
+        summaryBadge.className = "badge " + (unknownJobs.length > 0 ? "fail" : "ok");
+        overviewBadge.textContent = summaryBadge.textContent;
+        overviewBadge.className = summaryBadge.className;
+
+        if (unknownJobs.length) {
+          unknownJobs.forEach(function (job) {
+            unknownList.appendChild(buildUnknownRow(job));
+            overviewUnknownList.appendChild(buildUnknownRow(job));
+          });
+        } else {
+          unknownList.appendChild(el("div", "empty", "ไม่มีงานพิมพ์สถานะ unknown ค้างตรวจสอบ"));
+          overviewUnknownList.appendChild(el("div", "empty", "ไม่มีงานพิมพ์สถานะ unknown ค้างตรวจสอบ"));
+        }
+
+        var visibleEntries = entries.filter(function (e) {
+          return e.status === "waiting" || e.status === "shooting" || e.status === "ready" || e.status === "printing";
+        });
+        if (visibleEntries.length) {
+          visibleEntries.slice(0, 15).forEach(function (entry) {
+            var st = String(entry.status || "-");
+            var row = el("div", "row");
+            var main = el("div", "row-main");
+            main.appendChild(el("div", "row-title", "คิว " + (entry.code || "-") + " · " + (entry.people_count || 1) + " คน"));
+            main.appendChild(el("div", "row-sub", "อัปเดต: " + formatTime(entry.updated_at || entry.created_at) + (entry.code === activeCode ? " | กำลังใช้งานบนบูธ" : "")));
+            row.appendChild(main);
+            row.appendChild(el("span", "badge " + statusBadgeClass(st), st));
+            activeList.appendChild(row);
+          });
+        } else {
+          activeList.appendChild(el("div", "empty", "ไม่มีคิวที่กำลังดำเนินการ"));
+        }
+      }
+
+      function renderEvents(data) {
+        var list = document.getElementById("events-list");
+        var countBadge = document.getElementById("events-count-badge");
+        var policyBadge = document.getElementById("policy-event-name");
+        clearNode(list);
+
+        var active = data && data.active_event;
+        var events = Array.isArray(data && data.events) ? data.events : [];
+        currentActiveEvent = active;
+        countBadge.textContent = events.length + " งาน";
+
+        if (active) {
+          eventBadge.textContent = active.name + " (" + (active.intake_open ? "เปิดรับคิว" : "ปิดรับคิว") + ")";
+          eventBadge.className = "badge " + (active.intake_open ? "ok" : "fail");
+          policyBadge.textContent = active.name;
+
+          var activeInput = document.activeElement && document.activeElement.id;
+          if (!activeInput || activeInput.indexOf("pol-") !== 0) {
+            var p = active.policy || {};
+            document.getElementById("pol-mode").value = active.mode || "event";
+            document.getElementById("pol-intake").value = active.intake_open ? "true" : "false";
+            document.getElementById("pol-retake").value = p.retake_limit !== undefined ? p.retake_limit : 2;
+            document.getElementById("pol-idle").value = p.kiosk_idle_timeout_sec !== undefined ? p.kiosk_idle_timeout_sec : 60;
+            document.getElementById("pol-cooldown").value = p.kiosk_cooldown_sec !== undefined ? p.kiosk_cooldown_sec : 5;
+            document.getElementById("pol-retention").value = p.retention_days !== undefined ? p.retention_days : 30;
+            document.getElementById("pol-lang").value = p.default_language || "th";
+            document.getElementById("pol-brand-title").value = p.brand_title || "";
+            document.getElementById("pol-brand-subtitle").value = p.brand_subtitle || "";
+            document.getElementById("pol-privacy").value = p.privacy_notice || "";
+          }
+        }
+
+        events.forEach(function (ev) {
+          var row = el("div", "row");
+          var main = el("div", "row-main");
+          main.appendChild(el("div", "row-title", ev.name + (ev.status === "active" ? " (กำลังใช้งาน)" : "")));
+          main.appendChild(el("div", "row-sub", "ID: " + ev.id + " | โหมด: " + ev.mode + " | รับคิว: " + (ev.intake_open ? "เปิด" : "ปิด")));
+          row.appendChild(main);
+          var actions = el("div", "row-actions");
+          actions.appendChild(el("span", "badge " + (ev.status === "active" ? "ok" : "warn"), ev.status));
+          if (ev.status !== "active") {
+            var actBtn = el("button", "primary", "เปิดใช้งานงานนี้");
+            actBtn.type = "button";
+            actBtn.onclick = function () {
+              api("/api/share/events-config/" + encodeURIComponent(ev.id) + "/activate", { method: "POST" }).then(function () {
+                showBanner("สลับไปใช้งาน Event: " + ev.name, "ok");
+                refreshAll();
+              }).catch(function (err) { showBanner(err.message, "fail"); });
+            };
+            actions.appendChild(actBtn);
+          }
+          row.appendChild(actions);
+          list.appendChild(row);
+        });
+      }
+
+      function renderOutbox(outboxData) {
+        var list = document.getElementById("outbox-list");
+        var summaryBadge = document.getElementById("outbox-summary");
+        var mOutbox = document.getElementById("m-outbox");
+        var mOutboxSub = document.getElementById("m-outbox-sub");
+        clearNode(list);
+
+        var items = Array.isArray(outboxData && outboxData.items) ? outboxData.items : [];
+        var counts = (outboxData && outboxData.counts) || {};
+        var pending = Number(counts.pending || 0);
+        var uploading = Number(counts.uploading || 0);
+        var failed = Number(counts.failed || 0);
+        var ready = Number(counts.ready || 0);
+
+        mOutbox.textContent = String(pending + uploading + failed);
+        mOutboxSub.textContent = "รอส่ง " + pending + " | ล้มเหลว " + failed + " | สำเร็จ " + ready;
+        summaryBadge.textContent = "รอดำเนินการ " + (pending + uploading) + " | ล้มเหลว " + failed;
+        summaryBadge.className = "badge " + (failed > 0 ? "fail" : ((pending + uploading) > 0 ? "warn" : "ok"));
+
+        if (!items.length) { list.appendChild(el("div", "empty", "ไม่มีรายการใน Cloud Outbox")); return; }
+        items.forEach(function (item) {
+          var mediaId = item.media_id || "";
+          var st = String(item.state || "pending");
+          var row = el("div", "row");
+          var main = el("div", "row-main");
+          main.appendChild(el("div", "row-title", mediaId + " (" + st + ")"));
+          var sub = "ลองใหม่แล้ว: " + (item.retry_count !== undefined ? item.retry_count : 0);
+          if (item.next_retry_at) sub += " | รอบถัดไป: " + formatTime(item.next_retry_at);
+          if (item.last_error) sub += " | ข้อผิดพลาด: " + item.last_error;
+          main.appendChild(el("div", "row-sub", sub));
+          row.appendChild(main);
+          var actions = el("div", "row-actions");
+          actions.appendChild(el("span", "badge " + statusBadgeClass(st), st));
+          if (st !== "ready") {
+            var retryBtn = el("button", "primary", "ส่งใหม่ทันที");
+            retryBtn.type = "button";
+            retryBtn.onclick = function () {
+              retryBtn.disabled = true;
+              api("/api/share/outbox/" + encodeURIComponent(mediaId) + "/retry", {
+                method: "POST", headers: { "Idempotency-Key": makeIdempotencyKey("outbox-retry") }
+              }).then(function () { showBanner("ตั้งคิวส่งซ้ำแล้ว", "ok"); refreshAll(); }).catch(function (err) {
+                showBanner(err.message, "fail"); retryBtn.disabled = false;
+              });
+            };
+            actions.appendChild(retryBtn);
+          }
+          row.appendChild(actions);
+          list.appendChild(row);
+        });
+      }
+
+      function renderTokens(data) {
+        var list = document.getElementById("tokens-list");
+        var badge = document.getElementById("tokens-summary");
+        clearNode(list);
+        var tokens = Array.isArray(data && data.tokens) ? data.tokens : [];
+        var activeCount = tokens.filter(function (t) { return t.active; }).length;
+        badge.textContent = "ใช้งานได้ " + activeCount + " / ทั้งหมด " + tokens.length;
+        if (!tokens.length) { list.appendChild(el("div", "empty", "ยังไม่มี Personal QR Token")); return; }
+        tokens.forEach(function (tok) {
+          var row = el("div", "row");
+          var main = el("div", "row-main");
+          main.appendChild(el("div", "row-title", "Token " + tok.id + (tok.session_code ? " (คิว/รอบ: " + tok.session_code + ")" : "")));
+          main.appendChild(el("div", "row-sub", "ภาพ: " + (tok.media_ids || []).length + " | หมดอายุ: " + formatTime(tok.expires_at)));
+          row.appendChild(main);
+          var actions = el("div", "row-actions");
+          actions.appendChild(el("span", "badge " + (tok.active ? "ok" : "fail"), tok.active ? "ACTIVE" : "REVOKED/EXPIRED"));
+          if (tok.active) {
+            var revBtn = el("button", "danger", "ยกเลิกลิงก์");
+            revBtn.type = "button";
+            revBtn.onclick = function () {
+              api("/api/share/tokens/" + encodeURIComponent(tok.id) + "/revoke", { method: "POST" }).then(function () {
+                showBanner("ยกเลิก Share Token " + tok.id + " แล้ว", "ok"); refreshAll();
+              }).catch(function (err) { showBanner(err.message, "fail"); });
+            };
+            actions.appendChild(revBtn);
+          }
+          row.appendChild(actions);
+          list.appendChild(row);
+        });
+      }
+
+      function renderAnalytics(stats) {
+        if (!stats) return;
+        document.getElementById("an-sessions").textContent = (stats.sessions_total || 0) + " / " + (stats.sessions_completed || 0);
+        document.getElementById("an-kiosk-sub").textContent = "Kiosk เสร็จสิ้น: " + (stats.kiosk_sessions_completed || 0) + " | Queue: " + (stats.queue_sessions_total || 0);
+        document.getElementById("an-prints").textContent = (stats.print_submitted || 0) + " / " + (stats.print_unknown || 0);
+        document.getElementById("an-reprints").textContent = "สั่งพิมพ์ซ้ำ: " + (stats.print_reprints || 0);
+        document.getElementById("an-paper").textContent = String(stats.estimated_paper_sheets || 0);
+        document.getElementById("an-paper-note").textContent = stats.paper_estimate_note || "";
+        document.getElementById("an-tokens").textContent = (stats.active_share_tokens || 0) + " / " + (stats.revoked_share_tokens || 0);
+
+        var tList = document.getElementById("an-templates-list");
+        clearNode(tList);
+        var usage = stats.template_usage || {};
+        var keys = Object.keys(usage);
+        if (!keys.length) { tList.appendChild(el("div", "empty", "ยังไม่มีสถิติการใช้เทมเพลต")); return; }
+        keys.forEach(function (k) {
+          var row = el("div", "row");
+          row.appendChild(el("div", "row-title", "เทมเพลต: " + k));
+          row.appendChild(el("span", "badge ok", usage[k] + " ครั้ง"));
+          tList.appendChild(row);
+        });
+      }
+
+      function renderAudit(auditData) {
+        var tbody = document.getElementById("audit-tbody");
+        var summaryBadge = document.getElementById("audit-summary");
+        clearNode(tbody);
+        var items = Array.isArray(auditData && auditData.events) ? auditData.events : [];
+        summaryBadge.textContent = items.length + " รายการล่าสุด";
+        if (!items.length) {
+          var emptyTr = el("tr"); var emptyTd = el("td", "empty", "ยังไม่มีบันทึกเหตุการณ์"); emptyTd.colSpan = 4;
+          emptyTr.appendChild(emptyTd); tbody.appendChild(emptyTr); return;
+        }
+        items.forEach(function (ev) {
+          var tr = el("tr");
+          tr.appendChild(el("td", "", formatTime(ev.created_at)));
+          tr.appendChild(el("td", "", (ev.action || "-") + (ev.result && ev.result !== "ok" ? " [" + ev.result + "]" : "")));
+          tr.appendChild(el("td", "", [ev.entity_type, ev.entity_id].filter(Boolean).join(":") || "-"));
+          var detailStr = ev.detail ? (typeof ev.detail === "string" ? ev.detail : JSON.stringify(ev.detail)) : "";
+          var actorLabel = [ev.actor_role, ev.actor_host].filter(Boolean).join("@");
+          tr.appendChild(el("td", "", (actorLabel ? "[" + actorLabel + "] " : "") + (detailStr || "-")));
+          tbody.appendChild(tr);
+        });
+      }
+
+      async function refreshAll() {
+        if (refreshing) { pendingRefresh = true; return; }
+        refreshing = true;
+        try {
+          var results = await Promise.allSettled([
+            api("/api/share/health"),
+            api("/api/share/preflight"),
+            api("/api/share/guest-queue"),
+            api("/api/share/print_queue"),
+            api("/api/share/outbox?limit=40"),
+            api("/api/share/audit-events?limit=40"),
+            api("/api/share/events-config"),
+            api("/api/share/tokens?limit=40"),
+            api("/api/share/analytics")
+          ]);
+          var healthData = results[0].status === "fulfilled" ? results[0].value : null;
+          var preflightData = results[1].status === "fulfilled" ? results[1].value : null;
+          var guestQueueData = results[2].status === "fulfilled" ? results[2].value : null;
+          var printQueueData = results[3].status === "fulfilled" ? results[3].value : null;
+
+          if (healthData || preflightData) renderHealthAndPreflight(healthData, preflightData);
+          if (guestQueueData || printQueueData) renderQueue(guestQueueData, printQueueData, healthData);
+          if (results[4].status === "fulfilled") renderOutbox(results[4].value);
+          if (results[5].status === "fulfilled") renderAudit(results[5].value);
+          if (results[6].status === "fulfilled") renderEvents(results[6].value);
+          if (results[7].status === "fulfilled") renderTokens(results[7].value);
+          if (results[8].status === "fulfilled") renderAnalytics(results[8].value);
+
+          lastSyncEl.textContent = "อัปเดต " + new Date().toLocaleTimeString("th-TH", { hour12: false });
+        } finally {
+          refreshing = false;
+          if (pendingRefresh) { pendingRefresh = false; refreshAll(); }
+        }
+      }
+
+      function schedulePoll(ms) {
+        if (pollTimer) clearInterval(pollTimer);
+        pollTimer = setInterval(function () {
+          if (!document.hidden) refreshAll();
+        }, ms);
+      }
+
+      if (sseBadge) {
+        sseBadge.textContent = "อัปเดตอัตโนมัติ (8 วิ)";
+        sseBadge.className = "badge ok";
+      }
+      document.addEventListener("visibilitychange", function () {
+        if (!document.hidden) refreshAll();
+      });
+
+      document.getElementById("save-token-btn").onclick = function () {
+        setAdminToken(tokenInput.value.trim()); showBanner("บันทึก Admin Token แล้ว", "ok"); refreshAll();
+      };
+      document.getElementById("clear-token-btn").onclick = function () {
+        tokenInput.value = ""; setAdminToken(""); showBanner("ล้าง Admin Token แล้ว", "ok"); refreshAll();
+      };
+      document.getElementById("refresh-all-btn").onclick = refreshAll;
+      document.getElementById("recheck-preflight-btn").onclick = function () {
+        api("/api/share/preflight").then(function () { showBanner("ตรวจความพร้อมระบบเรียบร้อย", "ok"); refreshAll(); }).catch(function (err) { showBanner(err.message, "fail"); });
+      };
+      document.getElementById("toggle-intake-btn").onclick = function () {
+        if (!currentActiveEvent) return;
+        api("/api/share/events-config/" + encodeURIComponent(currentActiveEvent.id), {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ intake_open: !currentActiveEvent.intake_open })
+        }).then(function (ev) {
+          showBanner((ev.intake_open ? "เปิดรับคิวแล้ว" : "ปิดรับคิวชั่วคราวแล้ว"), "ok"); refreshAll();
+        }).catch(function (err) { showBanner(err.message, "fail"); });
+      };
+      if (toggleOfflineBtn) {
+        toggleOfflineBtn.onclick = function () {
+          api("/api/share/offline-mode", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ offline_mode: !currentOfflineMode })
+          }).then(function (data) {
+            showBanner(data.offline_mode ? "เปิดโหมดออฟไลน์แล้ว (ไม่พึ่ง Wi-Fi)" : "ปิดโหมดออฟไลน์แล้ว", "ok");
+            refreshAll();
+          }).catch(function (err) { showBanner(err.message, "fail"); });
+        };
+      }
+      document.getElementById("create-event-btn").onclick = function () {
+        var name = document.getElementById("new-event-name").value.trim();
+        if (!name) { showBanner("กรุณาระบุชื่องาน", "fail"); return; }
+        api("/api/share/events-config", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: name, mode: document.getElementById("new-event-mode").value, activate: true })
+        }).then(function () {
+          document.getElementById("new-event-name").value = ""; showBanner("สร้างและเปิดใช้งานงานใหม่แล้ว", "ok"); refreshAll();
+        }).catch(function (err) { showBanner(err.message, "fail"); });
+      };
+      document.getElementById("clone-event-btn").onclick = function () {
+        if (!currentActiveEvent) return;
+        var name = document.getElementById("new-event-name").value.trim() || (currentActiveEvent.name + " (สำเนา)");
+        api("/api/share/events-config/" + encodeURIComponent(currentActiveEvent.id) + "/clone", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: name, activate: true })
+        }).then(function () {
+          document.getElementById("new-event-name").value = ""; showBanner("โคลนงานใหม่เรียบร้อยแล้ว", "ok"); refreshAll();
+        }).catch(function (err) { showBanner(err.message, "fail"); });
+      };
+      document.getElementById("save-policy-btn").onclick = function () {
+        if (!currentActiveEvent) return;
+        var payload = {
+          mode: document.getElementById("pol-mode").value,
+          intake_open: document.getElementById("pol-intake").value === "true",
+          policy: {
+            retake_limit: Number(document.getElementById("pol-retake").value),
+            kiosk_idle_timeout_sec: Number(document.getElementById("pol-idle").value),
+            kiosk_cooldown_sec: Number(document.getElementById("pol-cooldown").value),
+            retention_days: Number(document.getElementById("pol-retention").value),
+            default_language: document.getElementById("pol-lang").value,
+            brand_title: document.getElementById("pol-brand-title").value.trim(),
+            brand_subtitle: document.getElementById("pol-brand-subtitle").value.trim(),
+            privacy_notice: document.getElementById("pol-privacy").value.trim()
+          }
+        };
+        api("/api/share/events-config/" + encodeURIComponent(currentActiveEvent.id), {
+          method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload)
+        }).then(function () { showBanner("บันทึกนโยบาย Event เรียบร้อย", "ok"); refreshAll(); }).catch(function (err) { showBanner(err.message, "fail"); });
+      };
+      document.getElementById("preview-retention-btn").onclick = function () {
+        api("/api/share/retention/preview").then(function (data) {
+          document.getElementById("retention-badge").textContent = "เข้าเกณฑ์ลบ " + data.eligible_count + " | คุ้มครอง " + data.protected_count;
+          document.getElementById("retention-summary").textContent = "เกณฑ์ " + data.retention_days + " วัน: เข้าเกณฑ์ลบ " + data.eligible_count + " ภาพ (ข้ามภาพที่คุ้มครองอยู่ " + data.protected_count + " ภาพ)";
+        }).catch(function (err) { showBanner(err.message, "fail"); });
+      };
+      document.getElementById("purge-retention-btn").onclick = function () {
+        api("/api/share/retention/purge", {
+          method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ dry_run: false })
+        }).then(function (data) {
+          showBanner("ลบภาพครบอายุแล้ว " + data.deleted_count + " รายการ และยกเลิก Token หมดอายุ " + data.revoked_expired_tokens + " รายการ", "ok");
+          refreshAll();
+        }).catch(function (err) { showBanner(err.message, "fail"); });
+      };
+      document.getElementById("export-csv-btn").onclick = function () {
+        var headers = {};
+        var tok = getAdminToken();
+        if (tok) headers["X-Admin-Token"] = tok;
+        fetch("/api/share/analytics/export.csv", { headers: headers, cache: "no-store" })
+          .then(function (res) { if (!res.ok) throw new Error("HTTP " + res.status); return res.blob(); })
+          .then(function (blob) {
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement("a");
+            a.href = url; a.download = "photobooth-analytics.csv";
+            document.body.appendChild(a); a.click(); a.remove();
+            setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+          }).catch(function (err) { showBanner("ส่งออก CSV ไม่สำเร็จ: " + err.message, "fail"); });
+      };
+
+      schedulePoll(8000);
+      refreshAll();
+    })();
+  </script>
+</body>
+</html>

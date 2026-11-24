@@ -1,0 +1,1544 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>บูธถ่ายภาพงานลอยกระทง</title>
+<link rel="stylesheet" href="/assets/photobooth-theme.css?v=loy-foreground-25691124" />
+  <script src="/assets/photobooth-loykrathong-scene.js?v=loy-foreground-25691124" defer></script>
+  <style>
+    * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: var(--pb-font-sans);
+      background: #120b06;
+      color: var(--pb-dark-ink);
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 22px;
+      gap: 12px;
+    }
+    .corner-unlock {
+      width: 52px;
+      height: 52px;
+      border-radius: 999px;
+      background: transparent;
+      border: 1px solid transparent;
+      color: rgba(254, 243, 199, 0.25);
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    .corner-unlock:hover { border-color: var(--pb-dark-border-subtle); color: var(--pb-dark-muted); }
+    .lang-switch {
+      display: inline-flex;
+      gap: 6px;
+      padding: 5px;
+      border-radius: 999px;
+      background: var(--pb-glass-dark-pill);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--pb-dark-border);
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45), var(--pb-dark-bevel);
+    }
+    .pill-btn {
+      padding: 9px 18px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--pb-dark-ink-soft);
+      font-family: inherit;
+      font-size: 0.92rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.16s ease, color 0.16s ease;
+    }
+    .pill-btn.active {
+      background: var(--pb-gold-grad);
+      color: var(--pb-light-ink);
+      font-weight: 800;
+      box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
+    }
+    #idle-timer-pill {
+      background: var(--pb-glass-dark-pill);
+      border: 1px solid var(--pb-dark-border);
+      color: var(--pb-dark-ink-soft);
+    }
+    main {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 24px 36px;
+    }
+    .screen {
+      display: none;
+      width: min(980px, 100%);
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 20px;
+      background: linear-gradient(155deg, rgba(22, 16, 11, 0.74) 0%, rgba(14, 10, 7, 0.84) 100%);
+      backdrop-filter: blur(20px) saturate(155%);
+      -webkit-backdrop-filter: blur(20px) saturate(155%);
+      border: 1px solid var(--pb-dark-border);
+      border-radius: 28px;
+      padding: 32px 26px;
+      box-shadow: var(--pb-dark-shadow), var(--pb-dark-bevel);
+    }
+    .pb-stage-pane, .pb-side-drawer {
+      background: linear-gradient(155deg, rgba(22, 16, 11, 0.76) 0%, rgba(14, 10, 7, 0.84) 100%);
+    }
+    .screen.active { display: flex; animation: uiCard 0.26s var(--pb-ease-out) both; }
+    h1 { margin: 0; font-size: clamp(1.9rem, 4vw, 2.9rem); font-weight: 800; color: var(--pb-dark-ink); letter-spacing: -0.015em; }
+    h2 { margin: 0; font-size: clamp(1.35rem, 3vw, 2rem); font-weight: 800; color: var(--pb-dark-ink); }
+    p { margin: 0; color: var(--pb-dark-muted); font-size: 1.05rem; max-width: 680px; }
+    .cta {
+      min-width: 270px;
+      min-height: 64px;
+      padding: 16px 34px;
+      border-radius: 999px;
+      border: 1px solid rgba(252, 211, 77, 0.65);
+      background: var(--pb-gold-grad);
+      color: var(--pb-light-ink);
+      font-family: inherit;
+      font-size: 1.2rem;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: var(--pb-gold-glow);
+      transition: transform 0.14s var(--pb-ease-out), background 0.16s ease;
+    }
+    .cta:hover:not(:disabled) { background: var(--pb-gold-grad-hover); transform: translateY(-1px); }
+    .cta:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-secondary {
+      min-height: 56px;
+      padding: 14px 26px;
+      border-radius: 999px;
+      border: 1px solid var(--pb-dark-border-subtle);
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--pb-dark-ink);
+      font-family: inherit;
+      font-size: 1.02rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .btn-secondary:hover:not(:disabled) { background: rgba(255, 255, 255, 0.16); border-color: var(--pb-dark-border); }
+    .tpl-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(215px, 1fr));
+      gap: 14px;
+      width: 100%;
+    }
+    .tpl-card {
+      background: var(--pb-glass-dark-card);
+      border: 1px solid var(--pb-dark-border-subtle);
+      border-radius: 20px;
+      padding: 12px 14px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 14px;
+      text-align: left;
+      color: var(--pb-dark-ink);
+      font-family: inherit;
+      transition: transform 0.14s var(--pb-ease-out), border-color 0.16s ease, background 0.16s ease;
+    }
+    .tpl-card:hover { background: rgba(251, 191, 36, 0.10); border-color: var(--pb-dark-border); }
+    .tpl-card.selected {
+      border: 2px solid var(--pb-dark-border-active);
+      background: rgba(251, 191, 36, 0.18);
+      box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.30);
+    }
+    .tpl-thumb {
+      flex: none;
+      height: 88px;
+      max-width: 96px;
+      aspect-ratio: 2 / 3;
+      border-radius: 10px;
+      background: #fffdf9;
+      border: 1.5px solid var(--pb-dark-border);
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45);
+    }
+    .tpl-thumb.landscape { width: 92px; height: auto; }
+    .tpl-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; padding-right: 26px; }
+    .tpl-title { font-weight: 700; font-size: 1.02rem; color: var(--pb-dark-ink); }
+    .tpl-meta { color: var(--pb-dark-muted); font-size: 0.85rem; }
+    .stage-box {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 3 / 2;
+      background: #0a0705;
+      border-radius: 22px;
+      overflow: hidden;
+      border: 1px solid var(--pb-dark-border);
+      display: grid;
+      place-items: center;
+      box-shadow: 0 18px 42px rgba(0, 0, 0, 0.5);
+    }
+    .stage-box > img, .stage-box > video {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+    #live-video.is-mirrored { transform: scaleX(-1); }
+    .live-offline {
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 24px;
+      text-align: center;
+      background: rgba(15, 11, 8, 0.84);
+      backdrop-filter: blur(8px);
+      color: var(--pb-dark-ink);
+    }
+    .live-offline p { font-size: 0.94rem; max-width: 420px; }
+    .flash-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 6;
+      background: #fffbeb;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.14s ease-out;
+    }
+    .flash-overlay.show { opacity: 0.92; transition: none; }
+    .shot-strip {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+      width: 100%;
+    }
+    .shot-strip[hidden] { display: none !important; }
+    .shot-thumb {
+      width: 76px;
+      height: 52px;
+      border-radius: 10px;
+      object-fit: cover;
+      border: 1.5px solid var(--pb-dark-border-active);
+      background: #140d07;
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.4);
+    }
+    .cam-source-box {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 14px;
+      border-radius: 18px;
+    }
+    .cam-source-label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--pb-dark-muted);
+      letter-spacing: 0.04em;
+    }
+    .cam-mode-track {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      padding: 4px;
+      border-radius: 999px;
+      background: rgba(12, 9, 6, 0.65);
+      border: 1px solid var(--pb-dark-border-subtle);
+    }
+    .cam-mode-btn {
+      padding: 9px 10px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--pb-dark-ink-soft);
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.16s ease, color 0.16s ease;
+    }
+    .cam-mode-btn.active {
+      background: var(--pb-gold-grad);
+      color: var(--pb-light-ink);
+      font-weight: 800;
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.35);
+    }
+    #device-cam-controls { display: flex; flex-direction: column; gap: 8px; }
+    #device-cam-controls[hidden] { display: none !important; }
+    #cam-device-select {
+      width: 100%;
+      padding: 9px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--pb-dark-border-subtle);
+      background: var(--pb-dark-input);
+      color: var(--pb-dark-ink);
+      font-family: inherit;
+      font-size: 0.85rem;
+    }
+    .cam-mirror-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.85rem;
+      color: var(--pb-dark-ink-soft);
+      cursor: pointer;
+    }
+    .cam-mirror-row input { width: 16px; height: 16px; accent-color: #f59e0b; cursor: pointer; }
+    .tpl-stage-preview {
+      width: min(300px, 78%);
+      aspect-ratio: 2 / 3;
+      background: #fffdf9;
+      border: 2px solid var(--pb-dark-border-active);
+      border-radius: 14px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 22px 52px rgba(0, 0, 0, 0.55);
+    }
+    .tpl-stage-preview.landscape { width: min(440px, 92%); aspect-ratio: 3 / 2; }
+    .tpl-layer-bg, .tpl-layer-overlay {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: fill;
+      pointer-events: none;
+    }
+    .tpl-layer-bg { z-index: 0; }
+    .tpl-layer-overlay { z-index: 2; }
+    .tpl-stage-preview .slot-box, .tpl-thumb .slot-box {
+      position: absolute;
+      z-index: 1;
+      display: grid;
+      place-items: center;
+      border: 2px dashed rgba(254, 243, 199, 0.85);
+      background: rgba(24, 18, 13, 0.52);
+      color: #fffbeb;
+      font-weight: 800;
+      font-size: 1.05rem;
+      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.85);
+    }
+    .tpl-thumb .slot-box {
+      border-width: 1px;
+      font-size: 0.65rem;
+    }
+    .drawer-sub { color: var(--pb-dark-muted); font-size: 0.9rem; margin: 4px 0 0; }
+    .tip-card {
+      padding: 14px 16px;
+      border-radius: 18px;
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      color: var(--pb-dark-ink-soft);
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+    .topbar-center { display: flex; align-items: center; justify-content: center; flex: 1; min-width: 0; }
+    .stepper-wrap { display: flex; justify-content: center; padding: 0 18px 8px; }
+    .stepper-wrap[hidden] { display: none !important; }
+    @media (max-width: 640px) { .topbar-center .pb-eyebrow-pill { display: none; } }
+    .countdown {
+      position: absolute;
+      inset: 0;
+      display: none;
+      place-items: center;
+      background: rgba(15, 12, 9, 0.45);
+      font-size: clamp(4rem, 12vw, 7rem);
+      font-weight: 900;
+      color: #fde68a;
+      text-shadow: 0 6px 24px rgba(0, 0, 0, 0.8);
+    }
+    .countdown.show { display: grid; }
+    .guide-frame {
+      position: absolute;
+      inset: 6%;
+      border: 2px dashed rgba(251, 191, 36, 0.55);
+      border-radius: 14px;
+      pointer-events: none;
+    }
+    .actions-row { display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; }
+    .notice {
+      font-size: 0.92rem;
+      color: var(--pb-dark-ink-soft);
+      background: rgba(255, 250, 235, 0.06);
+      border: 1px solid var(--pb-dark-border-subtle);
+      border-radius: 16px;
+      padding: 13px 18px;
+      max-width: 700px;
+    }
+    .qr-img { width: 220px; height: 220px; background: #fffdf9; border: 2px solid var(--pb-dark-border); border-radius: 20px; padding: 12px; object-fit: contain; box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4); }
+    #d-gallery-link { color: #fcd34d !important; font-weight: 700; }
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 12, 9, 0.78);
+      backdrop-filter: blur(10px);
+      display: none;
+      place-items: center;
+      z-index: 50;
+      padding: 20px;
+    }
+    .modal.show { display: grid; animation: uiFade 0.18s var(--pb-ease-out) both; }
+    .modal-box {
+      width: min(410px, 100%);
+      background: #fffdf9;
+      color: var(--pb-light-ink);
+      border: 1px solid var(--pb-light-border);
+      border-radius: 24px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+    }
+    .modal-box h2 { color: var(--pb-light-ink); font-size: 1.25rem; }
+    .modal-box input {
+      padding: 12px 14px;
+      font-size: 1.05rem;
+      border-radius: 12px;
+      border: 1px solid rgba(120, 53, 15, 0.25);
+      background: #faf6f0;
+      color: var(--pb-light-ink);
+    }
+    .modal-box .btn-secondary {
+      background: #f6efdf;
+      color: var(--pb-light-ink);
+      border-color: rgba(146, 64, 14, 0.2);
+      min-height: 46px;
+      padding: 10px 20px;
+    }
+    #unlock-err { color: var(--pb-rose-ink) !important; font-weight: 600; }
+  </style>
+</head>
+<body class="pb-ambient-bg" data-lk-scene="river-full">
+  <header class="topbar">
+    <button id="corner-unlock-btn" class="corner-unlock" type="button" aria-label="เมนูเจ้าหน้าที่">⚙</button>
+    <div class="topbar-center">
+      <div class="pb-eyebrow-pill">✨ สโมสรนักศึกษาคณะวิทยาศาสตร์ ม.อ. · ตู้ถ่ายภาพฟรี</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div id="idle-timer-pill" class="pill-btn" style="display:none;"></div>
+      <div class="lang-switch">
+        <button id="lang-th" class="pill-btn active" type="button">ไทย</button>
+        <button id="lang-en" class="pill-btn" type="button">EN</button>
+      </div>
+    </div>
+  </header>
+
+  <div id="kiosk-stepper-wrap" class="stepper-wrap" hidden>
+    <nav id="kiosk-stepper" class="pb-stepper-track" aria-label="ขั้นตอนการถ่ายภาพ">
+      <span class="pb-step-pill" data-step="template">1. เลือกกรอบ</span>
+      <span class="pb-step-pill" data-step="live">2. ถ่ายภาพ</span>
+      <span class="pb-step-pill" data-step="preview">3. ตรวจภาพ</span>
+      <span class="pb-step-pill" data-step="delivery">4. รับรูป / QR</span>
+    </nav>
+  </div>
+
+  <main>
+    <section id="screen-welcome" class="screen active">
+      <img class="pb-festival-logo" src="/assets/pb-loy-logo.webp" alt="งานประเพณีลอยกระทง">
+      <h1 id="w-title">บูธถ่ายภาพงานลอยกระทง</h1>
+      <p id="w-subtitle">ถ่ายภาพและรับรูปฟรี</p>
+      <div id="w-privacy" class="notice">
+        <svg class="pb-icon" style="color:#fbbf24;margin-right:6px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>
+        <span id="w-privacy-text">ภาพถ่ายของคุณเข้าถึงได้ผ่าน QR ส่วนตัวและถูกลบตามกำหนด</span>
+      </div>
+      <div class="pb-floating-dock" style="margin-top:8px;">
+        <button id="start-btn" class="cta" type="button">
+          <svg class="pb-icon pb-icon-lg" style="margin-right:8px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+          <span class="btn-label">แตะเพื่อเริ่มถ่ายภาพ</span>
+        </button>
+      </div>
+    </section>
+
+    <section id="screen-unavailable" class="screen">
+      <h1 id="u-title">ระบบปิดชั่วคราว</h1>
+      <p id="u-desc">กรุณาติดต่อเจ้าหน้าที่ดูแลบูธ</p>
+      <div class="pb-floating-dock">
+        <button id="u-retry-btn" class="btn-secondary" type="button">ลองตรวจสอบอีกครั้ง</button>
+      </div>
+    </section>
+
+    <section id="screen-template" class="screen" style="background:transparent;border:none;box-shadow:none;padding:0;width:min(1240px,100%);">
+      <div class="pb-split-stage">
+        <div class="pb-stage-pane">
+          <div class="pb-eyebrow-pill">✨ พรีวิวกรอบรูปที่เลือก</div>
+          <div id="tpl-stage-preview" class="tpl-stage-preview"></div>
+          <p id="tpl-stage-caption" class="drawer-sub">เลือกเทมเพลตทางด้านขวาเพื่อดูสัดส่วนช่องภาพ</p>
+        </div>
+        <aside class="pb-side-drawer">
+          <div>
+            <h2 id="t-title">เลือกกรอบรูปที่ต้องการ</h2>
+            <p class="drawer-sub">แตะเลือกกรอบรูป แล้วกดถัดไปเพื่อเปิดกล้อง</p>
+          </div>
+          <div class="pb-side-drawer-body glass-scroll">
+            <div id="tpl-grid" class="tpl-grid" style="grid-template-columns:1fr;"></div>
+          </div>
+          <div class="pb-side-drawer-footer">
+            <button id="t-back-btn" class="btn-secondary" type="button" style="flex:0 0 auto;">ย้อนกลับ</button>
+            <button id="t-next-btn" class="cta" type="button" style="flex:1;min-width:0;min-height:54px;font-size:1.02rem;padding:12px 18px;">
+              <span class="btn-label">ถัดไป · เปิดกล้อง</span>
+            </button>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section id="screen-live" class="screen" style="background:transparent;border:none;box-shadow:none;padding:0;width:min(1240px,100%);">
+      <div class="pb-split-stage">
+        <div class="pb-stage-pane">
+          <div class="stage-box">
+            <img id="live-img" alt="Live View" />
+            <video id="live-video" class="is-mirrored" autoplay playsinline muted style="display:none;"></video>
+            <div class="guide-frame"></div>
+            <div id="live-camera-offline" class="live-offline" style="display:none;">
+              <strong id="live-offline-title">ยังไม่พบสัญญาณกล้อง</strong>
+              <p id="live-offline-desc"></p>
+              <button id="live-switch-fallback-btn" class="btn-secondary" type="button" style="min-height:44px;padding:10px 18px;font-size:0.9rem;">สลับไปใช้กล้องในเครื่อง</button>
+            </div>
+            <div id="flash-overlay" class="flash-overlay"></div>
+            <div id="countdown-overlay" class="countdown">3</div>
+          </div>
+          <div id="live-shot-strip" class="shot-strip" hidden></div>
+        </div>
+        <aside class="pb-side-drawer">
+          <div>
+            <div class="pb-eyebrow-pill" id="l-source-pill">ภาพสดจากกล้อง</div>
+            <h2 id="l-title" style="margin-top:8px;">จัดท่าให้พร้อมหน้ากล้อง</h2>
+          </div>
+          <div class="glass-dark-card cam-source-box">
+            <div id="cam-source-label" class="cam-source-label">แหล่งกล้องถ่ายภาพ</div>
+            <div class="cam-mode-track" role="group" aria-label="เลือกกล้อง">
+              <button id="cam-mode-device" class="cam-mode-btn" type="button" data-cam-mode="device">กล้องในเครื่อง</button>
+              <button id="cam-mode-external" class="cam-mode-btn" type="button" data-cam-mode="external">กล้องนอก (Canon)</button>
+            </div>
+            <div id="device-cam-controls">
+              <select id="cam-device-select" aria-label="เลือกอุปกรณ์กล้องในเครื่อง"></select>
+              <label class="cam-mirror-row">
+                <input id="cam-mirror-toggle" type="checkbox" checked />
+                <span id="cam-mirror-label">กลับซ้าย-ขวา (โหมดกระจก)</span>
+              </label>
+            </div>
+          </div>
+          <div class="glass-dark-card tip-card">
+            <svg class="pb-icon pb-icon-lg" style="color:#fbbf24;margin-top:2px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+            <span id="l-status">กดปุ่มถ่ายภาพเพื่อเริ่มนับถอยหลัง</span>
+          </div>
+          <div class="pb-side-drawer-footer" style="margin-top:auto;">
+            <button id="l-cancel-btn" class="btn-secondary" type="button">ยกเลิก</button>
+            <button id="l-capture-btn" class="cta" type="button" style="flex:1;min-width:0;min-height:54px;font-size:1.05rem;padding:12px 18px;">
+              <svg class="pb-icon" style="margin-right:6px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+              <span class="btn-label">เริ่มถ่ายภาพ</span>
+            </button>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section id="screen-preview" class="screen" style="background:transparent;border:none;box-shadow:none;padding:0;width:min(1240px,100%);">
+      <div class="pb-split-stage">
+        <div class="pb-stage-pane">
+          <div class="stage-box">
+            <img id="preview-img" alt="Preview" />
+          </div>
+        </div>
+        <aside class="pb-side-drawer">
+          <div>
+            <div class="pb-eyebrow-pill">ตัวอย่างภาพ</div>
+            <h2 id="p-title" style="margin-top:8px;">ตรวจสอบภาพของคุณ</h2>
+          </div>
+          <div class="glass-dark-card tip-card">
+            <svg class="pb-icon" style="color:#fbbf24;margin-top:2px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+            <span id="p-retake-info"></span>
+          </div>
+          <div class="pb-side-drawer-footer" style="margin-top:auto;">
+            <button id="p-retake-btn" class="btn-secondary" type="button">ถ่ายใหม่</button>
+            <button id="p-confirm-btn" class="cta" type="button" style="flex:1;min-width:0;min-height:54px;font-size:1.02rem;padding:12px 18px;">
+              <span class="btn-label">ยืนยัน &amp; พิมพ์ / รับ QR</span>
+            </button>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section id="screen-delivery" class="screen">
+      <h1 id="d-title">รูปพร้อมแล้ว</h1>
+      <p id="d-print-status"></p>
+      <img id="d-qr-img" class="qr-img" alt="QR Code" style="display:none;" />
+      <p id="d-qr-status"></p>
+      <a id="d-gallery-link" href="#" target="_blank" rel="noopener" style="color:#fcd34d;word-break:break-all;display:none;"></a>
+      <div class="pb-floating-dock">
+        <button id="d-finish-btn" class="cta" type="button">เสร็จสิ้น · เคลียร์หน้าจอ</button>
+      </div>
+    </section>
+  </main>
+
+  <div id="unlock-modal" class="modal" role="dialog" aria-modal="true">
+    <div class="pb-modal-hybrid">
+      <div class="pb-modal-hybrid-head">
+        <button id="unlock-cancel" class="pb-modal-hybrid-close" type="button" aria-label="ปิด">✕</button>
+        <div class="pb-eyebrow-pill">✨ เมนูเจ้าหน้าที่</div>
+        <h2 style="font-size:1.25rem;margin:0;color:#fffbeb;">ปลดล็อกเมนูเจ้าหน้าที่</h2>
+      </div>
+      <div class="pb-modal-hybrid-body">
+        <label for="unlock-pin" style="font-size:0.85rem;font-weight:700;color:#574536;">รหัส Admin PIN</label>
+        <input id="unlock-pin" type="password" placeholder="กรอกรหัส Admin PIN" autocomplete="off" style="padding:12px 14px;font-size:1.05rem;border-radius:12px;border:1px solid rgba(120,53,15,0.25);background:#faf6f0;color:#231912;" />
+        <p id="unlock-err" style="color:#be123c;font-size:0.88rem;margin:0;"></p>
+        <div class="actions-row" style="justify-content:flex-end;">
+          <button id="unlock-submit" class="cta" style="min-width:140px;min-height:46px;font-size:0.98rem;padding:10px 20px;" type="button">ยืนยันเข้าศูนย์ควบคุม</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var STRINGS = {
+        th: {
+          start: "แตะเพื่อเริ่มถ่ายภาพ",
+          unavailableTitle: "บูธถ่ายภาพยังไม่พร้อมให้บริการชั่วคราว",
+          unavailableDesc: "อาจปิดรับคิวชั่วคราวหรือกำลังตรวจอุปกรณ์ กรุณาติดต่อเจ้าหน้าที่",
+          retryCheck: "ลองตรวจสอบอีกครั้ง",
+          chooseTemplate: "เลือกกรอบรูปที่ต้องการ",
+          back: "ย้อนกลับ",
+          openCamera: "ถัดไป · เปิดกล้อง",
+          liveTitle: "จัดท่าให้พร้อมหน้ากล้อง",
+          liveReady: "กดปุ่มเพื่อเริ่มนับถอยหลังและถ่ายภาพ",
+          capturing: "กำลังถ่ายภาพ กรุณายิ้มค้างไว้...",
+          captureBtn: "เริ่มถ่ายภาพ",
+          cancel: "ยกเลิก",
+          camSourceLabel: "แหล่งกล้องถ่ายภาพ",
+          camDevice: "กล้องในเครื่อง",
+          camExternal: "กล้องนอก (Canon)",
+          camMirror: "กลับซ้าย-ขวา (โหมดกระจก)",
+          camDeviceReady: "กล้องในเครื่องพร้อมใช้งาน กดเริ่มถ่ายภาพได้เลย",
+          camExternalReady: "เชื่อมต่อกล้องนอก (Canon) กดเริ่มถ่ายภาพได้เลย",
+          composing: "กำลังรวมภาพลงในกรอบ...",
+          previewTitle: "ตรวจสอบภาพของคุณ",
+          retake: "ถ่ายใหม่",
+          confirm: "ยืนยัน · พิมพ์ & รับ QR",
+          deliveryTitle: "รูปพร้อมแล้ว",
+          finish: "เสร็จสิ้น · กลับหน้าแรก"
+        },
+        en: {
+          start: "Tap to Start (Free)",
+          unavailableTitle: "Booth Temporarily Unavailable",
+          unavailableDesc: "Intake is paused or hardware needs attention. Please ask staff.",
+          retryCheck: "Check Again",
+          chooseTemplate: "Choose Your Frame",
+          back: "Back",
+          openCamera: "Next · Camera",
+          liveTitle: "Look at the Camera & Pose",
+          liveReady: "Tap below to start countdown and capture",
+          capturing: "Capturing photos, hold your smile...",
+          captureBtn: "Start Capture",
+          cancel: "Cancel",
+          camSourceLabel: "Camera Source",
+          camDevice: "Built-in Camera",
+          camExternal: "External (Canon)",
+          camMirror: "Mirror Preview (Flip Horizontal)",
+          camDeviceReady: "Device camera ready. Tap Start Capture when set.",
+          camExternalReady: "Using external Canon camera. Tap Start Capture when set.",
+          composing: "Composing your photo frame...",
+          previewTitle: "Preview Your Photo",
+          retake: "Retake",
+          confirm: "Confirm · Print & Get QR",
+          deliveryTitle: "All Done! Collect Your Photos",
+          finish: "Finish · Reset Screen"
+        }
+      };
+
+      var savedCamMode = null;
+      var savedDeviceId = "";
+      var savedMirror = true;
+      try {
+        savedCamMode = localStorage.getItem("pb_kiosk_camera_mode");
+        savedDeviceId = localStorage.getItem("pb_kiosk_camera_device_id") || "";
+        var mVal = localStorage.getItem("pb_kiosk_camera_mirror");
+        if (mVal === "0") savedMirror = false;
+      } catch (_e) {}
+
+      var state = {
+        lang: "th",
+        config: null,
+        session: null,
+        selectedTemplateId: null,
+        mediaId: null,
+        finalizeIdemKey: null,
+        idleSecondsLeft: 0,
+        idleTimer: null,
+        cornerTaps: 0,
+        cornerTimer: null,
+        cameraMode: savedCamMode === "external" || savedCamMode === "device" ? savedCamMode : null,
+        cameraDeviceId: savedDeviceId,
+        cameraMirror: savedMirror,
+        mediaStream: null,
+        deviceCamToken: 0,
+        liveScreenActive: false,
+        capturing: false
+      };
+
+      function setButtonLabel(id, text) {
+        var btn = document.getElementById(id);
+        if (!btn) return;
+        var span = btn.querySelector(".btn-label");
+        if (span) span.textContent = text;
+        else btn.textContent = text;
+      }
+
+      function updateStepper(name) {
+        var order = ["template", "live", "preview", "delivery"];
+        var wrap = document.getElementById("kiosk-stepper-wrap");
+        if (!wrap) return;
+        var idx = order.indexOf(name);
+        wrap.hidden = idx < 0;
+        document.querySelectorAll("#kiosk-stepper .pb-step-pill").forEach(function (pill) {
+          var stepIdx = order.indexOf(pill.getAttribute("data-step"));
+          pill.classList.toggle("is-active", stepIdx === idx);
+          pill.classList.toggle("is-done", stepIdx >= 0 && idx > stepIdx);
+        });
+      }
+
+      function hideCameraOfflineOverlay() {
+        var box = document.getElementById("live-camera-offline");
+        if (box) box.style.display = "none";
+      }
+
+      function showCameraOfflineOverlay(title, desc, showFallbackBtn, fallbackToDevice) {
+        var box = document.getElementById("live-camera-offline");
+        if (!box) return;
+        document.getElementById("live-offline-title").textContent = title;
+        document.getElementById("live-offline-desc").textContent = desc;
+        var btn = document.getElementById("live-switch-fallback-btn");
+        if (btn) {
+          btn.style.display = showFallbackBtn ? "inline-flex" : "none";
+          btn.textContent = fallbackToDevice
+            ? (state.lang === "en" ? "Switch to Built-in Camera" : "สลับไปใช้กล้องในเครื่อง")
+            : (state.lang === "en" ? "Switch to External Canon" : "สลับไปใช้กล้องนอก (Canon)");
+          btn.onclick = function () {
+            setCameraMode(fallbackToDevice ? "device" : "external", true);
+          };
+        }
+        box.style.display = "flex";
+      }
+
+      function stopDeviceCamera() {
+        state.deviceCamToken += 1;
+        if (state.mediaStream) {
+          state.mediaStream.getTracks().forEach(function (track) {
+            try { track.stop(); } catch (_e) {}
+          });
+          state.mediaStream = null;
+        }
+        var video = document.getElementById("live-video");
+        if (video) {
+          try { video.pause(); } catch (_e) {}
+          video.srcObject = null;
+          video.style.display = "none";
+        }
+      }
+
+      function applyMirrorState() {
+        var video = document.getElementById("live-video");
+        var chk = document.getElementById("cam-mirror-toggle");
+        if (video) video.classList.toggle("is-mirrored", !!state.cameraMirror);
+        if (chk) chk.checked = !!state.cameraMirror;
+      }
+
+      async function refreshCameraDevices(activeDeviceId) {
+        var select = document.getElementById("cam-device-select");
+        if (!select || !navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) return;
+        try {
+          var devices = await navigator.mediaDevices.enumerateDevices();
+          var cams = devices.filter(function (d) { return d.kind === "videoinput"; });
+          while (select.firstChild) select.removeChild(select.firstChild);
+          if (!cams.length) {
+            var emptyOpt = document.createElement("option");
+            emptyOpt.value = "";
+            emptyOpt.textContent = state.lang === "en" ? "No built-in camera found" : "ไม่พบอุปกรณ์กล้องในเครื่อง";
+            select.appendChild(emptyOpt);
+            return;
+          }
+          cams.forEach(function (cam, idx) {
+            var opt = document.createElement("option");
+            opt.value = cam.deviceId || "";
+            opt.textContent = cam.label || ((state.lang === "en" ? "Camera " : "กล้องในเครื่อง ") + (idx + 1));
+            if (activeDeviceId && cam.deviceId === activeDeviceId) opt.selected = true;
+            else if (!activeDeviceId && state.cameraDeviceId && cam.deviceId === state.cameraDeviceId) opt.selected = true;
+            select.appendChild(opt);
+          });
+        } catch (_e) {}
+      }
+
+      async function startDeviceCamera(preferredId) {
+        stopDeviceCamera();
+        var token = state.deviceCamToken;
+        var video = document.getElementById("live-video");
+        var liveImg = document.getElementById("live-img");
+        var statusEl = document.getElementById("l-status");
+        var captureBtn = document.getElementById("l-capture-btn");
+        var t = STRINGS[state.lang] || STRINGS.th;
+        if (liveImg) {
+          liveImg.removeAttribute("src");
+          liveImg.style.display = "none";
+        }
+        hideCameraOfflineOverlay();
+        if (statusEl) {
+          statusEl.textContent = state.lang === "en" ? "Starting built-in camera..." : "กำลังเปิดกล้องในเครื่อง...";
+        }
+        if (captureBtn) captureBtn.disabled = true;
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          showCameraOfflineOverlay(
+            state.lang === "en" ? "Device Camera Unavailable" : "ไม่สามารถเปิดกล้องในเครื่องได้",
+            state.lang === "en" ? "Open via http://localhost:8000 or HTTPS to allow browser webcam access." : "กรุณาเปิดผ่าน http://localhost:8000 หรือ HTTPS เพื่อให้เบราว์เซอร์อนุญาตใช้กล้องในเครื่อง",
+            true,
+            false
+          );
+          if (captureBtn) captureBtn.disabled = true;
+          return;
+        }
+        try {
+          var constraints = {
+            video: preferredId
+              ? { deviceId: { exact: preferredId }, width: { ideal: 1920 }, height: { ideal: 1280 } }
+              : { facingMode: "user", width: { ideal: 1920 }, height: { ideal: 1280 } },
+            audio: false
+          };
+          var stream;
+          try {
+            stream = await navigator.mediaDevices.getUserMedia(constraints);
+          } catch (firstErr) {
+            if (preferredId) {
+              stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+            } else {
+              throw firstErr;
+            }
+          }
+          if (token !== state.deviceCamToken || !state.liveScreenActive || state.cameraMode !== "device") {
+            stream.getTracks().forEach(function (track) { try { track.stop(); } catch (_e) {} });
+            return;
+          }
+          state.mediaStream = stream;
+          video.srcObject = stream;
+          video.style.display = "block";
+          applyMirrorState();
+          video.play().catch(function () {});
+          var track = stream.getVideoTracks()[0];
+          var settings = track && typeof track.getSettings === "function" ? track.getSettings() : {};
+          if (settings.deviceId) {
+            state.cameraDeviceId = settings.deviceId;
+            try { localStorage.setItem("pb_kiosk_camera_device_id", settings.deviceId); } catch (_e) {}
+          }
+          refreshCameraDevices(state.cameraDeviceId);
+          if (statusEl) statusEl.textContent = t.camDeviceReady;
+          if (captureBtn) captureBtn.disabled = false;
+        } catch (err) {
+          if (token !== state.deviceCamToken || !state.liveScreenActive) return;
+          var msg = (err && err.name === "NotAllowedError")
+            ? (state.lang === "en" ? "Camera permission denied. Please allow camera access in browser settings." : "ยังไม่ได้รับสิทธิ์เปิดกล้อง กรุณากดอนุญาตการใช้กล้องในเบราว์เซอร์")
+            : (state.lang === "en" ? "Could not start device camera (" + (err && err.message ? err.message : "error") + ")" : "ไม่พบหรือไม่สามารถเปิดกล้องในเครื่องได้ (" + (err && err.message ? err.message : "ไม่สำเร็จ") + ")");
+          showCameraOfflineOverlay(
+            state.lang === "en" ? "Camera Permission / Device Error" : "ไม่สามารถเปิดกล้องในเครื่องได้",
+            msg,
+            true,
+            false
+          );
+          if (captureBtn) captureBtn.disabled = true;
+        }
+      }
+
+      async function startExternalCamera() {
+        stopDeviceCamera();
+        var liveImg = document.getElementById("live-img");
+        var statusEl = document.getElementById("l-status");
+        var captureBtn = document.getElementById("l-capture-btn");
+        var t = STRINGS[state.lang] || STRINGS.th;
+        hideCameraOfflineOverlay();
+        var connected = false;
+        try {
+          var health = await apiJson("/api/share/camera-health?ts=" + Date.now());
+          connected = health.connected === true;
+        } catch (_e) {}
+        if (!state.liveScreenActive || state.cameraMode !== "external") return;
+        if (!connected) {
+          liveImg.removeAttribute("src");
+          liveImg.style.display = "none";
+          showCameraOfflineOverlay(
+            state.lang === "en" ? "External Canon Camera Offline" : "ยังไม่พบกล้องนอก (Canon)",
+            state.lang === "en" ? "Check USB cable or switch to the built-in device camera." : "ตรวจสาย USB กล้อง Canon หรือสลับไปถ่ายด้วยกล้องในเครื่องแทนได้ทันที",
+            true,
+            true
+          );
+          if (statusEl) statusEl.textContent = state.lang === "en" ? "External camera is offline" : "กล้องนอก (Canon) ยังไม่เชื่อมต่อ";
+          if (captureBtn) captureBtn.disabled = true;
+          return;
+        }
+        liveImg.style.display = "block";
+        liveImg.src = "/api/aquisition/stream.mjpg?t=" + Date.now();
+        if (statusEl) statusEl.textContent = t.camExternalReady;
+        if (captureBtn) captureBtn.disabled = false;
+      }
+
+      function syncCameraModeUI() {
+        var mode = state.cameraMode || "device";
+        var btnDev = document.getElementById("cam-mode-device");
+        var btnExt = document.getElementById("cam-mode-external");
+        var controls = document.getElementById("device-cam-controls");
+        var pill = document.getElementById("l-source-pill");
+        if (btnDev) btnDev.classList.toggle("active", mode === "device");
+        if (btnExt) btnExt.classList.toggle("active", mode === "external");
+        if (controls) controls.hidden = mode !== "device";
+        if (pill) {
+          pill.textContent = mode === "device"
+            ? (state.lang === "en" ? "Built-in Camera Live" : "ภาพสด · กล้องในเครื่อง")
+            : (state.lang === "en" ? "Canon DSLR Live" : "ภาพสด · กล้องนอก (Canon)");
+        }
+      }
+
+      function setCameraMode(mode, persist) {
+        state.cameraMode = mode === "external" ? "external" : "device";
+        if (persist) {
+          try { localStorage.setItem("pb_kiosk_camera_mode", state.cameraMode); } catch (_e) {}
+        }
+        syncCameraModeUI();
+        if (state.liveScreenActive) {
+          if (state.cameraMode === "device") startDeviceCamera(state.cameraDeviceId);
+          else startExternalCamera();
+        }
+      }
+
+      function showScreen(name) {
+        document.querySelectorAll(".screen").forEach(function (s) { s.classList.toggle("active", s.id === "screen-" + name); });
+        updateStepper(name);
+        state.liveScreenActive = name === "live";
+        var liveImg = document.getElementById("live-img");
+        var strip = document.getElementById("live-shot-strip");
+        if (strip && name !== "live") {
+          while (strip.firstChild) strip.removeChild(strip.firstChild);
+          strip.hidden = true;
+        }
+        if (name === "live") {
+          if (!state.cameraMode) {
+            var canonOnline = !!(state.config && state.config.hardware && state.config.hardware.camera_connected);
+            state.cameraMode = canonOnline ? "external" : "device";
+          }
+          setCameraMode(state.cameraMode, false);
+        } else {
+          stopDeviceCamera();
+          hideCameraOfflineOverlay();
+          if (liveImg) {
+            liveImg.removeAttribute("src");
+            liveImg.style.display = "none";
+          }
+        }
+        resetIdleCountdown(name !== "welcome");
+      }
+
+      function applyLanguage() {
+        var t = STRINGS[state.lang] || STRINGS.th;
+        document.getElementById("lang-th").classList.toggle("active", state.lang === "th");
+        document.getElementById("lang-en").classList.toggle("active", state.lang === "en");
+        setButtonLabel("start-btn", t.start);
+        document.getElementById("u-title").textContent = t.unavailableTitle;
+        document.getElementById("u-desc").textContent = t.unavailableDesc;
+        document.getElementById("u-retry-btn").textContent = t.retryCheck;
+        document.getElementById("t-title").textContent = t.chooseTemplate;
+        document.getElementById("t-back-btn").textContent = t.back;
+        setButtonLabel("t-next-btn", t.openCamera);
+        document.getElementById("l-title").textContent = t.liveTitle;
+        document.getElementById("l-status").textContent = t.liveReady;
+        document.getElementById("l-cancel-btn").textContent = t.cancel;
+        document.getElementById("cam-source-label").textContent = t.camSourceLabel;
+        document.getElementById("cam-mode-device").textContent = t.camDevice;
+        document.getElementById("cam-mode-external").textContent = t.camExternal;
+        document.getElementById("cam-mirror-label").textContent = t.camMirror;
+        setButtonLabel("l-capture-btn", t.captureBtn);
+        document.getElementById("p-title").textContent = t.previewTitle;
+        document.getElementById("p-retake-btn").textContent = t.retake;
+        setButtonLabel("p-confirm-btn", t.confirm);
+        document.getElementById("d-title").textContent = t.deliveryTitle;
+        document.getElementById("d-finish-btn").textContent = t.finish;
+        syncCameraModeUI();
+      }
+
+      function privacyReset() {
+        stopDeviceCamera();
+        state.session = null;
+        state.mediaId = null;
+        state.finalizeIdemKey = null;
+        document.getElementById("preview-img").removeAttribute("src");
+        document.getElementById("d-qr-img").removeAttribute("src");
+        document.getElementById("d-qr-img").style.display = "none";
+        document.getElementById("d-gallery-link").style.display = "none";
+        document.getElementById("d-gallery-link").href = "#";
+        showScreen("welcome");
+        loadConfig();
+      }
+
+      function resetIdleCountdown(active) {
+        if (state.idleTimer) { clearInterval(state.idleTimer); state.idleTimer = null; }
+        var pill = document.getElementById("idle-timer-pill");
+        if (!active) { pill.style.display = "none"; return; }
+        var timeoutSec = Number((state.config && state.config.policy && state.config.policy.kiosk_idle_timeout_sec) || 60);
+        state.idleSecondsLeft = timeoutSec;
+        pill.style.display = "inline-block";
+        pill.textContent = state.idleSecondsLeft + "s";
+        state.idleTimer = setInterval(function () {
+          if (state.capturing) return;
+          state.idleSecondsLeft -= 1;
+          pill.textContent = Math.max(0, state.idleSecondsLeft) + "s";
+          if (state.idleSecondsLeft <= 0) {
+            privacyReset();
+          }
+        }, 1000);
+      }
+
+      function makeIdemKey(prefix) {
+        if (window.crypto && typeof window.crypto.randomUUID === "function") return prefix + "-" + window.crypto.randomUUID();
+        return prefix + "-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 10);
+      }
+
+      async function apiJson(url, opts) {
+        var res = await fetch(url, Object.assign({ cache: "no-store" }, opts || {}));
+        var data = await res.json().catch(function () { return {}; });
+        if (!res.ok) throw new Error(data.detail || ("HTTP " + res.status));
+        return data;
+      }
+
+      function populateTemplateLayers(container, tpl, isThumb) {
+        var w = Number(tpl.canvas_width) || 1200;
+        var h = Number(tpl.canvas_height) || 1800;
+        container.style.aspectRatio = w + " / " + h;
+        if (tpl.background_url) {
+          var bgImg = document.createElement("img");
+          bgImg.className = "tpl-layer-bg";
+          bgImg.src = tpl.background_url;
+          bgImg.alt = "";
+          container.appendChild(bgImg);
+        }
+        var slots = Array.isArray(tpl.slots) ? tpl.slots.slice() : [];
+        if (tpl.print_layout === "two_up" && slots.length) {
+          var right = (tpl.right_slots && tpl.right_slots.length) ? tpl.right_slots : slots.map(function (s) { return Object.assign({}, s, { x: Number(s.x) + w / 2 }); });
+          slots = slots.concat(right);
+        }
+        var cCount = Math.max(1, Number(tpl.capture_count) || 1);
+        slots.forEach(function (slot, idx) {
+          var box = document.createElement("div");
+          box.className = "slot-box";
+          box.style.left = (Number(slot.x) / w * 100) + "%";
+          box.style.top = (Number(slot.y) / h * 100) + "%";
+          box.style.width = (Number(slot.width) / w * 100) + "%";
+          box.style.height = (Number(slot.height) / h * 100) + "%";
+          box.textContent = String((idx % cCount) + 1);
+          container.appendChild(box);
+        });
+        if (tpl.overlay_url) {
+          var ovImg = document.createElement("img");
+          ovImg.className = "tpl-layer-overlay";
+          ovImg.src = tpl.overlay_url;
+          ovImg.alt = "";
+          container.appendChild(ovImg);
+        }
+        if (isThumb) {
+          container.classList.toggle("landscape", w > h);
+        }
+      }
+
+      function renderTemplateStagePreview(tpl) {
+        var stage = document.getElementById("tpl-stage-preview");
+        var cap = document.getElementById("tpl-stage-caption");
+        if (!stage) return;
+        while (stage.firstChild) stage.removeChild(stage.firstChild);
+        if (!tpl) {
+          stage.className = "tpl-stage-preview";
+          if (cap) cap.textContent = "";
+          return;
+        }
+        var w = Number(tpl.canvas_width) || 1200;
+        var h = Number(tpl.canvas_height) || 1800;
+        stage.className = "tpl-stage-preview" + (w > h ? " landscape" : "");
+        populateTemplateLayers(stage, tpl, false);
+        if (cap) cap.textContent = tpl.name + " · " + tpl.capture_count + " ช่อง (" + (tpl.download_format || "4×6") + ")";
+      }
+
+      function renderTemplates() {
+        var grid = document.getElementById("tpl-grid");
+        while (grid.firstChild) grid.removeChild(grid.firstChild);
+        var templates = (state.config && state.config.templates) || [];
+        if (!state.selectedTemplateId && templates.length) {
+          state.selectedTemplateId = state.config.active_template_id || templates[0].id;
+        }
+        var activeTpl = null;
+        templates.forEach(function (tpl) {
+          var isSel = tpl.id === state.selectedTemplateId;
+          if (isSel) activeTpl = tpl;
+          var card = document.createElement("button");
+          card.type = "button";
+          card.className = "tpl-card pb-selectable" + (isSel ? " selected" : "");
+          var badge = document.createElement("span");
+          badge.className = "pb-check-badge";
+          badge.textContent = "✓";
+
+          var thumb = document.createElement("div");
+          thumb.className = "tpl-thumb";
+          populateTemplateLayers(thumb, tpl, true);
+
+          var info = document.createElement("div");
+          info.className = "tpl-info";
+          var title = document.createElement("div");
+          title.className = "tpl-title";
+          title.textContent = tpl.name;
+          var meta = document.createElement("div");
+          meta.className = "tpl-meta";
+          meta.textContent = tpl.capture_count + " ช่อง · " + (tpl.download_format || "4×6");
+          info.appendChild(title);
+          info.appendChild(meta);
+
+          card.appendChild(badge);
+          card.appendChild(thumb);
+          card.appendChild(info);
+          card.onclick = function () {
+            state.selectedTemplateId = tpl.id;
+            renderTemplates();
+          };
+          grid.appendChild(card);
+        });
+        renderTemplateStagePreview(activeTpl);
+      }
+
+      async function loadConfig() {
+        try {
+          var cfg = await apiJson("/api/share/kiosk/config");
+          state.config = cfg;
+          var pol = cfg.policy || {};
+          document.getElementById("w-title").textContent = pol.brand_title || (cfg.event && cfg.event.name) || "บูธถ่ายภาพงานลอยกระทง";
+          document.getElementById("w-subtitle").textContent = pol.brand_subtitle || "";
+          var privNode = document.getElementById("w-privacy-text") || document.getElementById("w-privacy");
+          if (privNode) privNode.textContent = pol.privacy_notice || "";
+          if (!cfg.intake_open) {
+            showScreen("unavailable");
+          } else {
+            renderTemplates();
+          }
+        } catch (_err) {
+          showScreen("unavailable");
+        }
+      }
+
+      document.getElementById("lang-th").onclick = function () { state.lang = "th"; applyLanguage(); };
+      document.getElementById("lang-en").onclick = function () { state.lang = "en"; applyLanguage(); };
+      document.getElementById("u-retry-btn").onclick = function () { showScreen("welcome"); loadConfig(); };
+      document.getElementById("t-back-btn").onclick = privacyReset;
+      document.getElementById("l-cancel-btn").onclick = privacyReset;
+      document.getElementById("d-finish-btn").onclick = privacyReset;
+      document.getElementById("cam-mode-device").onclick = function () { setCameraMode("device", true); };
+      document.getElementById("cam-mode-external").onclick = function () { setCameraMode("external", true); };
+      document.getElementById("cam-device-select").onchange = function () {
+        state.cameraDeviceId = this.value || "";
+        try { localStorage.setItem("pb_kiosk_camera_device_id", state.cameraDeviceId); } catch (_e) {}
+        if (state.liveScreenActive && state.cameraMode === "device") {
+          startDeviceCamera(state.cameraDeviceId);
+        }
+      };
+      document.getElementById("cam-mirror-toggle").onchange = function () {
+        state.cameraMirror = !!this.checked;
+        try { localStorage.setItem("pb_kiosk_camera_mirror", state.cameraMirror ? "1" : "0"); } catch (_e) {}
+        applyMirrorState();
+      };
+      window.addEventListener("pagehide", stopDeviceCamera);
+
+      document.getElementById("start-btn").onclick = async function () {
+        var btn = this;
+        btn.disabled = true;
+        try {
+          await loadConfig();
+          if (!state.config || !state.config.intake_open) {
+            showScreen("unavailable");
+            return;
+          }
+          state.session = await apiJson("/api/share/kiosk/sessions", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Idempotency-Key": makeIdemKey("kiosk-start") },
+            body: JSON.stringify({ station_id: "kiosk-1", language: state.lang, template_id: state.selectedTemplateId })
+          });
+          renderTemplates();
+          showScreen("template");
+        } catch (err) {
+          document.getElementById("w-subtitle").textContent = err.message;
+        } finally {
+          btn.disabled = false;
+        }
+      };
+
+      document.getElementById("t-next-btn").onclick = async function () {
+        var btn = this;
+        btn.disabled = true;
+        try {
+          if (state.session && state.selectedTemplateId) {
+            await apiJson("/api/share/kiosk/sessions/" + encodeURIComponent(state.session.id) + "/template", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ template_id: state.selectedTemplateId })
+            }).catch(function () {});
+          }
+          showScreen("live");
+        } finally {
+          btn.disabled = false;
+        }
+      };
+
+      async function captureDeviceVideoFrame() {
+        var video = document.getElementById("live-video");
+        var vw = video && video.videoWidth ? video.videoWidth : 1280;
+        var vh = video && video.videoHeight ? video.videoHeight : 853;
+        var canvas = document.createElement("canvas");
+        canvas.width = vw;
+        canvas.height = vh;
+        var ctx = canvas.getContext("2d");
+        if (state.cameraMirror) {
+          ctx.translate(vw, 0);
+          ctx.scale(-1, 1);
+        }
+        ctx.drawImage(video, 0, 0, vw, vh);
+        var thumbUrl = canvas.toDataURL("image/jpeg", 0.55);
+        var blob = await new Promise(function (resolve, reject) {
+          canvas.toBlob(function (b) {
+            if (b) resolve(b);
+            else reject(new Error("ไม่สามารถบันทึกเฟรมจากกล้องได้"));
+          }, "image/jpeg", 0.92);
+        });
+        return { blob: blob, thumbUrl: thumbUrl, canvas: canvas };
+      }
+
+      function loadOptionalImage(url) {
+        if (!url) return Promise.resolve(null);
+        return new Promise(function (resolve) {
+          var img = new Image();
+          img.crossOrigin = "anonymous";
+          img.onload = function () { resolve(img); };
+          img.onerror = function () { resolve(null); };
+          img.src = url;
+        });
+      }
+
+      function drawCoverCanvas(ctx, source, dx, dy, dw, dh) {
+        var sw = source.width || 1;
+        var sh = source.height || 1;
+        var srcRatio = sw / sh;
+        var dstRatio = dw / dh;
+        var sx = 0, sy = 0, sWidth = sw, sHeight = sh;
+        if (srcRatio > dstRatio) {
+          sWidth = sh * dstRatio;
+          sx = (sw - sWidth) / 2;
+        } else if (srcRatio < dstRatio) {
+          sHeight = sw / dstRatio;
+          sy = (sh - sHeight) / 2;
+        }
+        ctx.drawImage(source, sx, sy, sWidth, sHeight, dx, dy, dw, dh);
+      }
+
+      async function composeTemplateClientSide(tpl, shotCanvases) {
+        var w = Math.max(1, Number((tpl && tpl.canvas_width) || 1200));
+        var h = Math.max(1, Number((tpl && tpl.canvas_height) || 1800));
+        var outCanvas = document.createElement("canvas");
+        outCanvas.width = w;
+        outCanvas.height = h;
+        var ctx = outCanvas.getContext("2d");
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, w, h);
+
+        var assets = await Promise.all([
+          loadOptionalImage(tpl && tpl.background_url),
+          loadOptionalImage(tpl && tpl.overlay_url)
+        ]);
+        var bgImg = assets[0];
+        var ovImg = assets[1];
+        if (bgImg) {
+          ctx.drawImage(bgImg, 0, 0, w, h);
+        }
+        var slots = Array.isArray(tpl && tpl.slots) ? tpl.slots.slice() : [{ x: 0, y: 0, width: w, height: h }];
+        if (tpl && tpl.print_layout === "two_up" && slots.length) {
+          var right = (tpl.right_slots && tpl.right_slots.length)
+            ? tpl.right_slots
+            : slots.map(function (s) { return Object.assign({}, s, { x: Number(s.x) + w / 2 }); });
+          slots = slots.concat(right);
+        }
+        slots.forEach(function (slot, idx) {
+          var srcCanvas = shotCanvases[idx % shotCanvases.length];
+          if (!srcCanvas) return;
+          drawCoverCanvas(ctx, srcCanvas, Number(slot.x), Number(slot.y), Math.max(1, Number(slot.width)), Math.max(1, Number(slot.height)));
+        });
+        if (ovImg) {
+          ctx.drawImage(ovImg, 0, 0, w, h);
+        }
+        return await new Promise(function (resolve, reject) {
+          outCanvas.toBlob(function (b) {
+            if (b) resolve(b);
+            else reject(new Error("ไม่สามารถประกอบภาพลงเทมเพลตได้"));
+          }, "image/png");
+        });
+      }
+
+      async function ensureKioskSession(tplId) {
+        if (state.session && state.session.id) return state.session;
+        state.session = await apiJson("/api/share/kiosk/sessions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Idempotency-Key": makeIdemKey("kiosk-start") },
+          body: JSON.stringify({ station_id: "kiosk-1", language: state.lang, template_id: tplId || state.selectedTemplateId })
+        });
+        return state.session;
+      }
+
+      function triggerFlash() {
+        var flash = document.getElementById("flash-overlay");
+        if (!flash) return;
+        flash.classList.add("show");
+        setTimeout(function () { flash.classList.remove("show"); }, 160);
+      }
+
+      document.getElementById("l-capture-btn").onclick = async function () {
+        var btn = this;
+        var countdownEl = document.getElementById("countdown-overlay");
+        var statusEl = document.getElementById("l-status");
+        var t = STRINGS[state.lang] || STRINGS.th;
+        var tpl = ((state.config && state.config.templates) || []).find(function (x) { return x.id === state.selectedTemplateId; });
+        var tplId = (tpl && tpl.id) || state.selectedTemplateId;
+        var shotCount = Math.max(1, Number((tpl && tpl.capture_count) || 1));
+
+        btn.disabled = true;
+        state.capturing = true;
+        resetIdleCountdown(true);
+        try {
+          if (state.cameraMode === "device") {
+            var video = document.getElementById("live-video");
+            if (!state.mediaStream || !video || video.readyState < 2 || video.videoWidth === 0) {
+              throw new Error(state.lang === "en" ? "Device camera is not ready yet." : "กล้องในเครื่องยังไม่พร้อมถ่าย กรุณารอสักครู่");
+            }
+            var strip = document.getElementById("live-shot-strip");
+            if (strip) {
+              while (strip.firstChild) strip.removeChild(strip.firstChild);
+              strip.hidden = shotCount <= 1;
+            }
+            var shots = [];
+            var shotCanvases = [];
+            for (var i = 0; i < shotCount; i += 1) {
+              statusEl.textContent = (state.lang === "en"
+                ? ("Photo " + (i + 1) + " / " + shotCount + " · Hold your pose!")
+                : ("กำลังถ่ายรูปที่ " + (i + 1) + " / " + shotCount + " · เตรียมโพสท่า"));
+              for (var cd = 3; cd >= 1; cd -= 1) {
+                countdownEl.textContent = String(cd);
+                countdownEl.classList.add("show");
+                await new Promise(function (r) { setTimeout(r, 800); });
+              }
+              countdownEl.classList.remove("show");
+              triggerFlash();
+              var captured = await captureDeviceVideoFrame();
+              shots.push(captured.blob);
+              shotCanvases.push(captured.canvas);
+              if (strip && shotCount > 1) {
+                var thumbImg = document.createElement("img");
+                thumbImg.className = "shot-thumb";
+                thumbImg.src = captured.thumbUrl;
+                thumbImg.alt = "Shot " + (i + 1);
+                strip.appendChild(thumbImg);
+              }
+              resetIdleCountdown(true);
+              if (i + 1 < shotCount) {
+                await new Promise(function (r) { setTimeout(r, 700); });
+              }
+            }
+            statusEl.textContent = t.composing;
+            await ensureKioskSession(tplId);
+            var form = new FormData();
+            form.append("template_id", tplId);
+            shots.forEach(function (blob, idx) {
+              form.append("photos", blob, "shot-" + (idx + 1) + ".jpg");
+            });
+            var capRes = await fetch("/api/share/kiosk/sessions/" + encodeURIComponent(state.session.id) + "/capture-frames", {
+              method: "POST",
+              body: form,
+              cache: "no-store"
+            });
+            var capData = await capRes.json().catch(function () { return {}; });
+            var mediaId = capData.media_id;
+            var previewUrl = capData.preview_url;
+
+            if (capRes.status === 404 || capRes.status === 405) {
+              var composedPng = await composeTemplateClientSide(tpl, shotCanvases);
+              var fbForm = new FormData();
+              fbForm.append("template_id", tplId);
+              fbForm.append("title", "");
+              fbForm.append("subtitle", "");
+              fbForm.append("composed_image", composedPng, "template.png");
+              shots.forEach(function (blob, idx) {
+                fbForm.append("photos", blob, "shot-" + (idx + 1) + ".jpg");
+              });
+              var fbRes = await fetch("/api/share/compose-template-from-files", {
+                method: "POST",
+                body: fbForm,
+                cache: "no-store"
+              });
+              var fbData = await fbRes.json().catch(function () { return {}; });
+              if (fbRes.status === 403) {
+                throw new Error(state.lang === "en"
+                  ? "Server restart required after update. Please restart run.sh on the host Mac."
+                  : "เซิร์ฟเวอร์ยังไม่ได้รีสตาร์ทหลังอัปเดต กรุณาปิดแล้วเปิด run.sh ใหม่บนเครื่อง Mac");
+              }
+              if (!fbRes.ok || !fbData.id) {
+                throw new Error(fbData.detail || ("HTTP " + fbRes.status));
+              }
+              mediaId = fbData.id;
+              previewUrl = "/api/share/download-image/" + encodeURIComponent(mediaId);
+            } else if (!capRes.ok || !mediaId) {
+              throw new Error(capData.detail || ("HTTP " + capRes.status));
+            }
+
+            state.mediaId = mediaId;
+            state.finalizeIdemKey = makeIdemKey("kiosk-final");
+            document.getElementById("preview-img").src = previewUrl + "?t=" + Date.now();
+          } else {
+            statusEl.textContent = t.capturing;
+            var beforeItems = await apiJson("/api/mediacollection/?limit=5");
+            var latestBeforeId = Array.isArray(beforeItems) && beforeItems.length ? beforeItems[0].id : null;
+
+            for (var c = 3; c >= 1; c -= 1) {
+              countdownEl.textContent = String(c);
+              countdownEl.classList.add("show");
+              await new Promise(function (r) { setTimeout(r, 850); });
+            }
+            countdownEl.classList.remove("show");
+
+            var actionPath = (tpl && tpl.capture_count > 1) ? "/api/actions/collage/0" : "/api/actions/foto/0";
+            await fetch(actionPath, { cache: "no-store" });
+
+            var capturedId = null;
+            for (var poll = 0; poll < 45; poll += 1) {
+              await new Promise(function (r) { setTimeout(r, 750); });
+              resetIdleCountdown(true);
+              var afterItems = await apiJson("/api/mediacollection/?limit=5");
+              if (Array.isArray(afterItems) && afterItems.length && afterItems[0].id !== latestBeforeId) {
+                capturedId = afterItems[0].id;
+                break;
+              }
+            }
+            if (!capturedId) throw new Error("ไม่ได้รับภาพจากกล้องภายในเวลาที่กำหนด กรุณาลองใหม่หรือติดต่อเจ้าหน้าที่");
+            state.mediaId = capturedId;
+            state.finalizeIdemKey = makeIdemKey("kiosk-final");
+            document.getElementById("preview-img").src = "/api/share/download-image/" + encodeURIComponent(capturedId) + "?t=" + Date.now();
+          }
+
+          state.capturing = false;
+          var limit = Number((state.config && state.config.policy && state.config.policy.retake_limit) || 0);
+          var used = Number((state.session && state.session.retake_count) || 0);
+          document.getElementById("p-retake-btn").disabled = used >= limit;
+          document.getElementById("p-retake-info").textContent = (state.lang === "en" ? "Retakes left: " : "สิทธิ์ถ่ายใหม่คงเหลือ: ") + Math.max(0, limit - used) + (state.lang === "en" ? "" : " ครั้ง");
+          showScreen("preview");
+        } catch (err) {
+          countdownEl.classList.remove("show");
+          statusEl.textContent = err.message;
+        } finally {
+          state.capturing = false;
+          btn.disabled = false;
+        }
+      };
+
+      document.getElementById("p-retake-btn").onclick = async function () {
+        if (!state.session) return;
+        this.disabled = true;
+        try {
+          state.session = await apiJson("/api/share/kiosk/sessions/" + encodeURIComponent(state.session.id) + "/retake", { method: "POST" });
+          showScreen("live");
+        } catch (err) {
+          document.getElementById("p-retake-info").textContent = err.message;
+        }
+      };
+
+      document.getElementById("p-confirm-btn").onclick = async function () {
+        if (!state.session) return;
+        var btn = this;
+        btn.disabled = true;
+        try {
+          var res = await apiJson("/api/share/kiosk/sessions/" + encodeURIComponent(state.session.id) + "/finalize", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Idempotency-Key": state.finalizeIdemKey || makeIdemKey("kiosk-final") },
+            body: JSON.stringify({ media_id: state.mediaId, template_id: state.selectedTemplateId, auto_print: true, copies: 1 })
+          });
+          var p = res.print_result || {};
+          document.getElementById("d-print-status").textContent = p.ok
+            ? ("กำลังพิมพ์ภาพออกทางเครื่อง " + p.printer)
+            : (p.error ? ("การพิมพ์: " + p.error) : "บันทึกภาพเรียบร้อย (ไม่ได้สั่งพิมพ์อัตโนมัติ)");
+
+          var linkEl = document.getElementById("d-gallery-link");
+          var qrImg = document.getElementById("d-qr-img");
+          if (res.gallery_url) {
+            linkEl.href = res.gallery_url;
+            linkEl.textContent = res.gallery_url;
+            linkEl.style.display = "inline-block";
+          }
+          var cloud = res.cloud_status || {};
+          if (state.mediaId && cloud.status !== "uploading") {
+            qrImg.src = "/api/share/qr/" + encodeURIComponent(state.mediaId) + ".svg?t=" + Date.now();
+            qrImg.style.display = "block";
+            document.getElementById("d-qr-status").textContent = cloud.status === "ready"
+              ? "สแกน QR เพื่อดาวน์โหลดภาพได้ทันที"
+              : "โหมดออฟไลน์ · สแกน QR บนวงแลน/สายต่อตรง หรือรับภาพพิมพ์ที่เคาน์เตอร์";
+          } else {
+            qrImg.style.display = "none";
+            document.getElementById("d-qr-status").textContent = "Preparing Online QR · สามารถเปิดลิงก์แกลเลอรีส่วนตัวด้านล่างบน Wi-Fi งานได้ทันที";
+          }
+          showScreen("delivery");
+        } catch (err) {
+          document.getElementById("p-retake-info").textContent = err.message;
+        } finally {
+          btn.disabled = false;
+        }
+      };
+
+      document.getElementById("corner-unlock-btn").onclick = function () {
+        state.cornerTaps += 1;
+        clearTimeout(state.cornerTimer);
+        state.cornerTimer = setTimeout(function () { state.cornerTaps = 0; }, 2000);
+        if (state.cornerTaps >= 5) {
+          state.cornerTaps = 0;
+          document.getElementById("unlock-err").textContent = "";
+          document.getElementById("unlock-pin").value = "";
+          document.getElementById("unlock-modal").classList.add("show");
+        }
+      };
+      document.getElementById("unlock-cancel").onclick = function () {
+        document.getElementById("unlock-modal").classList.remove("show");
+      };
+      document.getElementById("unlock-submit").onclick = async function () {
+        var pin = document.getElementById("unlock-pin").value;
+        try {
+          var res = await apiJson("/api/share/kiosk/unlock", {
+            method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ pin: pin })
+          });
+          if (res.admin_token) {
+            try { localStorage.setItem("pb_control_center_admin_token", res.admin_token); } catch (_e) {}
+          }
+          location.href = "/control-center.html";
+        } catch (err) {
+          document.getElementById("unlock-err").textContent = err.message;
+        }
+      };
+
+      applyLanguage();
+      loadConfig();
+    })();
+  </script>
+</body>
+</html>

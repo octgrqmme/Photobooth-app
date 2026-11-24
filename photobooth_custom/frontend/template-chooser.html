@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Photobooth | เลือกเทมเพลต</title>
+<link rel="stylesheet" href="/assets/photobooth-theme.css?v=loy-offline-25691124">
+  <script src="/assets/photobooth-loykrathong-scene.js?v=loy-foreground-25691124" defer></script>
+  <style>
+    :root { font-family: var(--pb-font-sans); color: var(--pb-dark-ink); background: #120b06; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #120b06;
+      color: var(--pb-dark-ink);
+    }
+    main { width: min(1180px, 100%); margin: auto; padding: clamp(18px, 4vw, 42px); }
+    header { text-align: center; margin-bottom: 24px; }
+    header small { color: #fbbf24; font-weight: 800; letter-spacing: .18em; }
+    h1 { font: 800 clamp(30px, 5vw, 52px)/1.15 var(--pb-font-sans); margin: 8px 0; color: var(--pb-dark-ink); }
+    header p { color: var(--pb-dark-muted); font-size: clamp(15px, 2vw, 19px); margin: 0; }
+    .queue {
+      display: inline-flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      align-items: center;
+      margin: 0 auto 22px;
+      padding: 8px 18px;
+      border-radius: 999px;
+      background: var(--pb-glass-dark-pill);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--pb-dark-border);
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45), var(--pb-dark-bevel);
+      width: fit-content;
+      position: relative;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    .queue > span { color: var(--pb-dark-ink-soft); font-weight: 700; font-size: 14px; }
+    .queue strong {
+      border: 1px solid rgba(252, 211, 77, 0.65);
+      background: var(--pb-gold-grad);
+      color: var(--pb-light-ink);
+      border-radius: 999px;
+      padding: 6px 18px;
+      font: 900 22px var(--pb-font-sans);
+    }
+    #status { min-height: 28px; text-align: center; font-size: 15px; color: #fcd34d; margin-bottom: 14px; font-weight: 600; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 18px; }
+    .card {
+      border: 1px solid var(--pb-dark-border);
+      border-radius: 24px;
+      background: linear-gradient(155deg, rgba(22, 16, 11, 0.74) 0%, rgba(14, 10, 7, 0.84) 100%);
+      backdrop-filter: blur(22px) saturate(160%);
+      -webkit-backdrop-filter: blur(22px) saturate(160%);
+      color: var(--pb-dark-ink);
+      overflow: hidden;
+      box-shadow: var(--pb-dark-shadow), var(--pb-dark-bevel);
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.16s var(--pb-ease-out), border-color 0.16s ease;
+      animation: uiCard 0.26s var(--pb-ease-out) both;
+    }
+    .card.selected {
+      border: 2px solid var(--pb-dark-border-active);
+      box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.35), var(--pb-dark-shadow);
+    }
+    .preview { height: 240px; background: rgba(255, 250, 235, 0.04); border-bottom: 1px solid var(--pb-dark-border-subtle); display: grid; place-items: center; overflow: hidden; padding: 14px; }
+    .sheet { position: relative; width: min(64%, 154px); aspect-ratio: 2 / 3; background: #fffdf9; border: 2px solid rgba(251, 191, 36, 0.55); border-radius: 8px; box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45); overflow: hidden; }
+    .sheet.landscape { width: 91%; aspect-ratio: 3 / 2; }
+    .sheet img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: fill; z-index: 0; }
+    .sheet img.overlay { z-index: 2; pointer-events: none; }
+    .sheet .slot { position: absolute; z-index: 1; display: grid; place-items: center; border: 2px dashed rgba(254, 243, 199, 0.85); background: rgba(24, 18, 13, 0.58); color: #fffbeb; font: 800 18px var(--pb-font-sans); text-shadow: 0 1px 3px #000; }
+    .details { padding: 18px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+    .details strong { font-size: 19px; line-height: 1.3; color: var(--pb-dark-ink); }
+    .details span { color: var(--pb-dark-muted); font-size: 13px; }
+    .details button {
+      width: 100%;
+      min-height: 50px;
+      margin-top: auto;
+      border: 1px solid rgba(252, 211, 77, 0.65);
+      border-radius: 999px;
+      background: var(--pb-gold-grad);
+      color: var(--pb-light-ink);
+      font: 800 16px var(--pb-font-sans);
+      cursor: pointer;
+      touch-action: manipulation;
+      box-shadow: var(--pb-gold-glow);
+    }
+    .details button:hover:not(:disabled) { background: var(--pb-gold-grad-hover); }
+    .details button:disabled { opacity: .45; cursor: not-allowed; box-shadow: none; }
+    footer { text-align: center; color: var(--pb-dark-muted); padding: 28px 0 8px; font-size: 13px; }
+  </style>
+</head>
+<body class="pb-ambient-bg" data-lk-scene="river-full">
+  <main>
+    <header>
+      <img class="pb-festival-logo" src="/assets/pb-loy-logo.webp" alt="งานประเพณีลอยกระทง">
+      <h1>เลือกกรอบรูป</h1>
+      <p>แตะเลือกกรอบรูปที่ต้องการได้ตลอดเวลา (เปลี่ยนไม่ได้เฉพาะขณะกล้องกำลังถ่าย)</p>
+    </header>
+    <div id="queues" class="queue" aria-label="กรอบรูปปัจจุบัน"></div>
+    <div id="status" role="status">กำลังโหลดเทมเพลต…</div>
+    <div id="cards" class="cards"></div>
+  </main>
+  <script>
+    (function () {
+      var busy = false;
+      var lastFingerprint = "";
+      function safe(value) { return String(value == null ? "" : value).replace(/[&<>"']/g, function (ch) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]; }); }
+      function preview(template) {
+        var width = Number(template.canvas_width) || 1200;
+        var height = Number(template.canvas_height) || 1800;
+        var slots = (template.slots || []).slice();
+        if (template.print_layout === "two_up") {
+          var rightSlots = (template.right_slots && template.right_slots.length)
+            ? template.right_slots
+            : slots.map(function (slot) { return Object.assign({}, slot, { x: Number(slot.x) + width / 2 }); });
+          slots = slots.concat(rightSlots);
+        }
+        var captureCount = Math.max(1, Number(template.capture_count) || 1);
+        var marks = slots.map(function (slot, index) {
+          var x = Math.max(0, Math.min(100, Number(slot.x) / width * 100));
+          var y = Math.max(0, Math.min(100, Number(slot.y) / height * 100));
+          var w = Math.max(0, Math.min(100 - x, Number(slot.width) / width * 100));
+          var h = Math.max(0, Math.min(100 - y, Number(slot.height) / height * 100));
+          return '<span class="slot" style="left:' + x + '%;top:' + y + '%;width:' + w + '%;height:' + h + '%">' + (index % captureCount + 1) + '</span>';
+        }).join("");
+        return '<div class="sheet' + (width > height ? ' landscape' : '') + '" style="aspect-ratio:' + width + '/' + height + '">' + (template.background_url ? '<img class="bg" src="' + safe(template.background_url) + '" alt="">' : '') + marks + (template.overlay_url ? '<img class="overlay" src="' + safe(template.overlay_url) + '" alt="">' : '') + '</div>';
+      }
+      function status(message) { document.getElementById("status").textContent = message; }
+      async function request(url, options) {
+        var response = await fetch(url, Object.assign({ cache: "no-store" }, options || {}));
+        if (!response.ok) {
+          var body = await response.json().catch(function () { return {}; });
+          throw new Error(body.detail || "เชื่อมต่อไม่สำเร็จ (" + response.status + ")");
+        }
+        return response.json();
+      }
+      async function refresh() {
+        if (busy) return;
+        try {
+          var data = await request("/api/share/templates");
+          var activeId = data.active_template_id || null;
+          var captureBusy = !!data.capture_busy;
+          var templates = data.templates || [];
+          var activeTemplate = templates.find(function (item) { return item.id === activeId; });
+          var fingerprint = JSON.stringify([activeId, captureBusy, templates.map(function (item) { return [item.id, item.name, item.capture_count, item.print_layout, item.background_url, item.overlay_url]; })]);
+          if (fingerprint === lastFingerprint) return;
+          lastFingerprint = fingerprint;
+          var activeLabel = activeTemplate ? activeTemplate.name : (activeId || "—");
+          document.getElementById("queues").innerHTML = captureBusy
+            ? '<span>กำลังถ่ายภาพ · รอสักครู่</span><strong>' + safe(activeLabel) + '</strong>'
+            : '<span>กรอบที่ใช้งานอยู่</span><strong>' + safe(activeLabel) + '</strong>';
+          document.getElementById("cards").innerHTML = templates.map(function (template) {
+            var current = activeId === template.id;
+            var format = template.print_layout === "two_up" ? "พิมพ์ 4×6 สองชุด · โหลด 2×6 ชุดเดียว" : "พิมพ์และดาวน์โหลดภาพเต็ม";
+            return '<article class="card pb-selectable' + (current ? ' selected' : '') + '"><span class="pb-check-badge">✓</span><div class="preview">' + preview(template) + '</div><div class="details"><strong>' + safe(template.name) + '</strong><span>' + template.capture_count + ' รูปต่อชุด · ' + format + '</span><button type="button" data-template="' + safe(template.id) + '" data-template-name="' + safe(template.name) + '" ' + (captureBusy || current ? 'disabled' : '') + '>' + (current ? '✓ กำลังใช้กรอบนี้อยู่' : '✦ ใช้กรอบนี้') + '</button></div></article>';
+          }).join("");
+          status(captureBusy ? "กล้องกำลังถ่ายภาพอยู่ · รอให้ถ่ายชุดนี้เสร็จก่อนเปลี่ยนกรอบ" : "พร้อมเปลี่ยนกรอบ · แตะเลือกกรอบที่ต้องการแล้วกดถ่ายที่กล้องได้เลย");
+        } catch (error) { status(error.message); }
+      }
+      document.getElementById("cards").addEventListener("click", async function (event) {
+        var button = event.target.closest("button[data-template]");
+        if (!button || button.disabled || busy) return;
+        var templateId = button.dataset.template;
+        var templateName = button.dataset.templateName || templateId;
+        busy = true;
+        button.disabled = true;
+        try {
+          await request("/api/share/template-chooser/select", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ template_id: templateId })
+          });
+          status("เปลี่ยนเป็นกรอบ " + templateName + " แล้ว · เริ่มถ่ายได้ทันที");
+        } catch (error) { status(error.message); }
+        finally { busy = false; lastFingerprint = ""; refresh(); }
+      });
+      refresh();
+      setInterval(function () { if (!document.hidden) refresh(); }, 4000);
+      document.addEventListener("visibilitychange", function () { if (!document.hidden) refresh(); });
+    })();
+  </script>
+</body>
+</html>

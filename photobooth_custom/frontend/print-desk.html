@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Photobooth | โต๊ะพิมพ์ภาพ</title>
+  <meta name="referrer" content="no-referrer">
+  <script src="/assets/photobooth-stations.js?v=stations-1"></script>
+  <link rel="stylesheet" href="/assets/photobooth-theme.css?v=loy-offline-25691124">
+  <script src="/assets/photobooth-loykrathong-scene.js?v=lk-scene-1" defer></script>
+  <style>
+    :root { font-family: var(--pb-font-sans); color: var(--pb-light-ink); background: var(--pb-light-bg); }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 12% 0%, rgba(251, 191, 36, 0.14), transparent 42%),
+        var(--pb-light-bg);
+      color: var(--pb-light-ink);
+    }
+    header {
+      padding: 16px 24px;
+      background: var(--pb-light-header);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--pb-light-border-ink);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+    h1 { margin: 0; font-size: 22px; font-weight: 800; color: var(--pb-light-ink); }
+    header p { margin: 4px 0 0; color: var(--pb-light-muted); font-size: 13px; }
+    header a {
+      color: var(--pb-light-ink);
+      text-decoration: none;
+      padding: 8px 16px;
+      border-radius: 999px;
+      background: #fffdf9;
+      border: 1px solid var(--pb-light-border-ink);
+      font-weight: 700;
+      font-size: 13px;
+      box-shadow: 0 2px 6px rgba(35, 25, 18, 0.06);
+    }
+    header a:hover { background: var(--pb-light-sand-hover); }
+    main { max-width: 1500px; margin: auto; padding: 20px 24px 36px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(320px, 430px); gap: 20px; }
+    section {
+      background: var(--pb-glass-light);
+      backdrop-filter: blur(22px) saturate(155%);
+      border: 1px solid var(--pb-light-border);
+      border-radius: 24px;
+      padding: 20px;
+      min-width: 0;
+      box-shadow: var(--pb-light-shadow);
+      animation: uiCard 0.26s var(--pb-ease-out) both;
+    }
+    .bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+    h2 { margin: 0; font-size: 18px; font-weight: 800; color: var(--pb-light-ink); }
+    button, select { font-family: inherit; font-size: 14px; }
+    button {
+      min-height: 42px;
+      border: 1px solid rgba(120, 53, 15, 0.2);
+      border-radius: 12px;
+      background: #fffdf9;
+      color: var(--pb-light-ink);
+      padding: 8px 15px;
+      cursor: pointer;
+      font-weight: 700;
+      box-shadow: 0 2px 6px rgba(35, 25, 18, 0.05);
+      transition: transform 0.14s var(--pb-ease-out), background 0.16s ease;
+    }
+    button:hover:not(:disabled) { background: var(--pb-light-sand-hover); }
+    button:disabled { opacity: .5; cursor: not-allowed; }
+    .primary {
+      background: var(--pb-gold-grad);
+      color: var(--pb-light-ink);
+      border-color: rgba(217, 119, 6, 0.4);
+      font-weight: 800;
+      box-shadow: var(--pb-gold-glow);
+    }
+    .primary:hover:not(:disabled) { background: var(--pb-gold-grad-hover); }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; max-height: calc(100vh - 195px); overflow: auto; }
+    .card {
+      display: block;
+      padding: 0;
+      text-align: left;
+      overflow: hidden;
+      border-radius: 16px;
+      border: 2px solid var(--pb-light-border-ink);
+      background: #fffdf9;
+    }
+    .card.active {
+      border-color: #f59e0b;
+      box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.28);
+      background: var(--pb-light-sand-hover);
+    }
+    .card img { display: block; width: 100%; aspect-ratio: 2 / 3; object-fit: contain; background: var(--pb-light-sand); }
+    .card span { display: block; padding: 8px 10px; font-size: 12px; font-weight: 600; color: var(--pb-light-secondary); }
+    #preview { width: 100%; max-height: 56vh; object-fit: contain; background: var(--pb-light-sand); border: 1px solid var(--pb-light-border-ink); border-radius: 16px; display: none; }
+    #placeholder { padding: 55px 20px; text-align: center; color: var(--pb-light-muted); background: var(--pb-light-sand); border-radius: 16px; border: 1px dashed var(--pb-light-border-ink); }
+    .controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+    .controls label { font-weight: 700; color: var(--pb-light-secondary); font-size: 13px; }
+    .controls select, .controls input { font-family: inherit; font-size: 14px; min-width: 82px; padding: 9px 11px; border: 1px solid rgba(120, 53, 15, 0.22); border-radius: 12px; background: #fffdf9; color: var(--pb-light-ink); }
+    .controls input[type="number"] { width: 88px; text-align: center; font-weight: 700; }
+    #download { color: #b45309; font-weight: 700; text-decoration: none; padding: 8px 12px; border-radius: 10px; background: var(--pb-light-sand); border: 1px solid var(--pb-light-border-ink); }
+    #message { min-height: 22px; margin: 14px 0 0; color: var(--pb-emerald-ink); font-weight: 600; }
+    #message.error { color: var(--pb-rose-ink); }
+    #queue { color: var(--pb-light-muted); font-size: 13px; margin: 8px 0 0; }
+    @media (max-width: 850px) { main { grid-template-columns: 1fr; } .grid { max-height: 45vh; } header { align-items: flex-start; flex-direction: column; } }
+  </style>
+</head>
+<body data-lk-scene="parchment-river">
+  <header class="pb-admin-header">
+    <div class="pb-admin-header-inner">
+      <div class="pb-admin-header-top">
+        <div class="pb-admin-title-group">
+          <a href="/?view=operator#/" class="pb-pill-action">
+            <svg class="pb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+            กลับหน้าควบคุม
+          </a>
+          <div class="pb-admin-title-text">
+            <h1>โต๊ะพิมพ์ภาพ</h1>
+            <p>สโมสรนักศึกษาคณะวิทยาศาสตร์ ม.อ. · ดูภาพเก่าและสั่งพิมพ์ได้แม้ไม่ได้ต่อกล้อง Canon</p>
+          </div>
+        </div>
+        <nav class="pb-admin-action-bar" aria-label="นำทาง">
+          <a href="/station-pair.html" class="pb-pill-action" id="pair-console">จับคู่จุดบริการ</a>
+          <a href="/control-center.html" class="pb-pill-action">ศูนย์ควบคุม</a>
+          <a href="/print-desk.html" class="pb-pill-action is-active">โต๊ะพิมพ์ภาพ</a>
+          <a href="/queue-board.html" target="_blank" rel="noopener" class="pb-pill-action">จอคิว ↗</a>
+          <a href="/queue-admin.html" class="pb-pill-action">จัดการคิว</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+  <main>
+    <section>
+      <div class="bar">
+        <h2>
+          <svg class="pb-icon" style="color:#b45309;margin-right:6px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+          ภาพที่ถ่ายไว้
+        </h2>
+        <button id="refresh" type="button">
+          <svg class="pb-icon" style="margin-right:5px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
+          รีเฟรชภาพ
+        </button>
+      </div>
+      <div id="gallery" class="grid" aria-live="polite">กำลังโหลดภาพ...</div>
+    </section>
+    <section>
+      <div class="bar">
+        <h2>
+          <svg class="pb-icon" style="color:#b45309;margin-right:6px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
+          ภาพที่เลือก
+        </h2>
+        <span id="printer">กำลังตรวจเครื่องพิมพ์...</span>
+      </div>
+      <div id="placeholder">เลือกภาพจากด้านซ้าย</div>
+      <img id="preview" alt="ภาพที่เลือกสำหรับพิมพ์">
+      <div class="controls">
+        <label for="print-profile">เครื่องพิมพ์</label>
+        <select id="print-profile" aria-label="เลือกเครื่องพิมพ์ก่อนส่งภาพ"></select>
+        <label for="copies">จำนวนใบ</label>
+        <input id="copies" type="number" min="1" max="99" step="1" value="1" inputmode="numeric" aria-label="จำนวนใบ">
+        <button id="print" class="primary" type="button" disabled>ส่งเข้าคิวพิมพ์</button>
+        <a id="download" href="#" target="_blank" rel="noopener" hidden>ดาวน์โหลด / QR</a>
+      </div>
+      <div class="pb-callout-cream" style="margin-top:14px;">
+        <p id="queue" style="margin:0;">กำลังโหลดคิวพิมพ์...</p>
+      </div>
+      <p id="message" role="status" aria-live="polite"></p>
+    </section>
+  </main>
+  <script>
+    (function () {
+      'use strict';
+      var gallery = document.getElementById('gallery');
+      var preview = document.getElementById('preview');
+      var selectedId = null;
+      var printButton = document.getElementById('print');
+      var profileSelect = document.getElementById('print-profile');
+      var availableProfiles = [];
+      var sendingPrint = false;
+      var loadingQueue = false;
+      var loadingGallery = false;
+      var gallerySignature = null;
+      var stationReady = false;
+      var onMainMac = ['127.0.0.1', 'localhost', '[::1]'].includes(location.hostname);
+      var lastPrinterOnlineKey = null;
+      function updatePrintAvailability() { printButton.disabled = !stationReady || sendingPrint || !selectedId || !availableProfiles.some(function (profile) { return profile.id === profileSelect.value; }); }
+
+      function message(text, error) {
+        var node = document.getElementById('message');
+        node.textContent = text;
+        node.classList.toggle('error', !!error);
+      }
+
+      async function request(url, options) {
+        var controller = new AbortController();
+        var timer = setTimeout(function () { controller.abort(); }, 10000);
+        try {
+          var response = await fetch(url, Object.assign({ cache: 'no-store', signal: controller.signal }, options));
+          if (!response.ok) {
+            var detail = 'คำขอไม่สำเร็จ (HTTP ' + response.status + ')';
+            try { var body = await response.json(); detail = body.detail || body.error || detail; } catch (_ignored) {}
+            throw new Error(detail);
+          }
+          return response.json();
+        } finally { clearTimeout(timer); }
+      }
+
+      function imageUrl(kind, id) { return '/media/' + kind + '/' + encodeURIComponent(id); }
+
+      async function loadGallery() {
+        if (loadingGallery || !stationReady) return;
+        loadingGallery = true;
+        try {
+          var items = await request('/api/mediacollection/?limit=60');
+          items = items.filter(function (item) { return item.show_in_gallery !== false && (item.media_type === 'collage' || item.media_type === 'image'); });
+          items.sort(function (a, b) { return (b.created_at || '').localeCompare(a.created_at || ''); });
+          var signature = items.map(function (item) { return item.id + ':' + (item.revision || 0); }).join(',');
+          if (signature === gallerySignature) return;
+          gallerySignature = signature;
+          gallery.replaceChildren();
+          items.forEach(function (item) {
+            var card = document.createElement('button');
+            card.type = 'button';
+            card.className = 'card';
+            card.classList.toggle('active', item.id === selectedId);
+            card.setAttribute('aria-label', 'เลือกภาพ ' + item.id);
+            var image = document.createElement('img');
+            image.loading = 'lazy';
+            image.alt = '';
+            image.src = imageUrl('thumbnail', item.id);
+            image.onerror = function () { if (!image.dataset.fallback) { image.dataset.fallback = '1'; image.src = imageUrl('preview', item.id); } };
+            var caption = document.createElement('span');
+            caption.textContent = (item.media_type === 'collage' ? 'ชุดภาพ · ' : 'ภาพเดี่ยว · ') + (item.created_at ? new Date(item.created_at).toLocaleString('th-TH') : item.id);
+            card.append(image, caption);
+            card.onclick = function () {
+              selectedId = item.id;
+              gallery.querySelectorAll('.card').forEach(function (node) { node.classList.toggle('active', node === card); });
+              preview.src = imageUrl('preview', selectedId);
+              preview.onerror = function () { preview.onerror = null; preview.src = imageUrl('full', selectedId); };
+              preview.style.display = 'block';
+              document.getElementById('placeholder').hidden = true;
+              document.getElementById('download').href = '/api/share/download-page/' + encodeURIComponent(selectedId);
+              document.getElementById('download').hidden = false;
+              updatePrintAvailability();
+              message('');
+            };
+            gallery.appendChild(card);
+          });
+          if (!gallery.childElementCount) gallery.textContent = 'ยังไม่มีภาพในแกลเลอรี';
+        } catch (error) {
+          if (gallerySignature === null) gallery.textContent = 'โหลดภาพไม่สำเร็จ กำลังลองใหม่';
+        } finally { loadingGallery = false; }
+      }
+
+      async function loadQueue() {
+        if (loadingQueue) return;
+        loadingQueue = true;
+        try {
+          var status = await request('/api/share/print_queue');
+          var printers = status.printers || [];
+          document.getElementById('printer').textContent = printers.map(function (printer) { return printer.name + ': ' + (printer.online ? 'พร้อม' : 'ไม่พร้อม'); }).join(' · ') || 'ยังไม่ได้เลือกเครื่องพิมพ์';
+          document.getElementById('queue').textContent = 'คิวพิมพ์: ' + (status.queue_count || 0) + ' งาน · ' + printers.map(function (printer) { return printer.name + ' ' + printer.queue_count; }).join(' / ');
+          var onlineKey = printers.map(function (printer) { return printer.name + ':' + (printer.online ? '1' : '0'); }).join('|');
+          var shouldRefreshPrinters = !sendingPrint && ((lastPrinterOnlineKey !== null && onlineKey !== lastPrinterOnlineKey) || (!availableProfiles.length && printers.some(function (printer) { return printer.online; })));
+          lastPrinterOnlineKey = onlineKey;
+          if (shouldRefreshPrinters) {
+            loadPrinters().catch(function () {});
+          }
+        } catch (error) { document.getElementById('queue').textContent = 'ตรวจคิวพิมพ์ไม่ได้: ' + error.message; }
+        finally { loadingQueue = false; }
+      }
+
+      async function loadPrinters() {
+        var data = await request('/api/share/hardware/printers');
+        var prior = profileSelect.value;
+        availableProfiles = (data.profiles || []).filter(function (profile) {
+          return (data.printers || []).some(function (printer) { return printer.name === profile.printer_name && printer.online; });
+        });
+        profileSelect.replaceChildren();
+        (data.profiles || []).forEach(function (profile) {
+          var ready = availableProfiles.some(function (entry) { return entry.id === profile.id; });
+          var option = new Option(profile.name + ' · ' + profile.printer_name + (ready ? ' · พร้อม' : ' · ไม่พร้อม'), profile.id);
+          option.disabled = !ready;
+          profileSelect.add(option);
+        });
+        var preferred = availableProfiles.find(function (profile) { return profile.id === prior; }) || availableProfiles.find(function (profile) { return profile.id === data.active_profile_id; }) || availableProfiles[0];
+        if (preferred) profileSelect.value = preferred.id;
+        updatePrintAvailability();
+      }
+      profileSelect.onchange = updatePrintAvailability;
+
+      printButton.onclick = async function () {
+        if (!selectedId || sendingPrint) return;
+        var copiesInput = document.getElementById('copies');
+        if (copiesInput && !copiesInput.reportValidity()) return;
+        var copies = Number(copiesInput ? copiesInput.value : 1);
+        if (!Number.isInteger(copies) || copies < 1 || copies > 99) {
+          message('กรอกจำนวน 1–99 ใบ', true);
+          return;
+        }
+        var selectedProfileId = profileSelect.value;
+        var imageId = selectedId;
+        sendingPrint = true;
+        printButton.disabled = true;
+        message('กำลังตรวจเครื่องพิมพ์...');
+        try {
+          await loadPrinters();
+          var profile = availableProfiles.find(function (entry) { return entry.id === selectedProfileId; });
+          if (!profile) throw new Error('เครื่องพิมพ์ที่เลือกยังไม่พร้อม');
+          var idemKey = (window.crypto && typeof window.crypto.randomUUID === 'function')
+            ? ('print-' + window.crypto.randomUUID())
+            : ('print-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10));
+          message('กำลังส่งภาพไป ' + profile.name + '...');
+          var path = '/print/' + encodeURIComponent(imageId);
+          var options = { method: 'POST', headers: { 'Idempotency-Key': idemKey }, body: { profile_id: profile.id, copies: copies } };
+          var result = await pbStations.request(path, options);
+          message('ส่งไป ' + profile.name + ' ' + copies + ' ใบแล้ว · ' + (result.print_job_id || 'รับงานแล้ว'));
+          loadQueue();
+        } catch (error) { message('ส่งงานไม่สำเร็จหรือไม่แน่ชัด: ' + error.message + ' · ตรวจคิวก่อนกดซ้ำ', true); }
+        finally { sendingPrint = false; updatePrintAvailability(); }
+      };
+      document.getElementById('refresh').onclick = loadGallery;
+      async function start() {
+        document.getElementById('pair-console').hidden = !onMainMac;
+        try {
+          stationReady = await pbStations.authorize('print');
+          if (!stationReady) {
+            gallery.textContent = 'ขอ QR โต๊ะพิมพ์จาก Mac เครื่องหลัก';
+            return;
+          }
+          loadGallery();
+          loadQueue();
+          loadPrinters().catch(function (error) { message('ตรวจเครื่องพิมพ์ไม่ได้: ' + error.message, true); });
+          setInterval(loadQueue, 5000);
+          setInterval(loadGallery, 4000);
+        } catch (error) {
+          gallery.textContent = error.message || 'เชื่อมต่อ Mac ไม่สำเร็จ';
+        }
+      }
+      start();
+    }());
+  </script>
+</body>
+</html>

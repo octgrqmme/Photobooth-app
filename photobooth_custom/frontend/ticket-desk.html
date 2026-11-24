@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>จุดออกตั๋ว · Photobooth</title>
+  <link rel="stylesheet" href="/assets/photobooth-theme.css?v=loy-offline-25691124">
+  <script src="/assets/photobooth-stations.js?v=stations-1" defer></script>
+  <style>
+    body { margin: 0; color: var(--pb-light-ink); background: var(--pb-light-bg); font: 16px/1.55 var(--pb-font-sans); }
+    main { width: min(100% - 32px, 520px); margin: 5vh auto; }
+    header, form, article { background: var(--pb-light-card); border: 1px solid var(--pb-light-border); border-radius: 20px; padding: 20px; margin-bottom: 14px; }
+    header h1, article h2 { margin: 0; }
+    label { display: grid; gap: 4px; }
+    form { display: grid; gap: 12px; }
+    input, select, button { min-height: 46px; font: inherit; }
+    input, select { border: 1px solid var(--pb-light-border-ink); border-radius: 10px; padding: 5px 10px; background: white; color: inherit; }
+    #ticket { background: #2c1833; color: #fff5dc; text-align: center; }
+    #ticket-code { display: block; font-size: clamp(52px,14vw,90px); line-height: 1.2; margin: 10px 0; }
+    #ticket a { margin-top: 10px; color: #281b17; }
+    [hidden] { display: none !important; }
+  </style>
+</head>
+<body>
+  <main>
+    <header><h1>จุดออกตั๋ว</h1><p id="event-name">บูธถ่ายภาพ</p><p id="status" role="status">กำลังตรวจสิทธิ์…</p></header>
+    <form id="issue" hidden>
+      <label>ประเภทคิว <select id="category" required></select></label>
+      <label>จำนวนคน <input id="people" type="number" inputmode="numeric" value="1" min="1" max="999" required></label>
+      <button type="submit" class="pb-pill-action is-gold">ออกตั๋วคิว</button>
+    </form>
+    <article id="ticket" hidden>
+      <h2>บัตรคิวถ่ายภาพ</h2><strong id="ticket-code"></strong><p id="ticket-detail"></p>
+      <p>โปรดรอฟังประกาศหรือดูเลขบนจอคิว</p>
+      <a id="save" class="pb-pill-action is-gold" download>บันทึกบัตรคิว</a>
+    </article>
+  </main>
+  <script>
+    document.addEventListener("DOMContentLoaded", async function () {
+      var form = document.getElementById("issue");
+      var status = document.getElementById("status");
+      var select = document.getElementById("category");
+      var people = document.getElementById("people");
+      var button = form.querySelector("button");
+      var eventName = document.getElementById("event-name");
+      var submission = null;
+
+      function ticket(entry) {
+        document.getElementById("ticket-code").textContent = entry.code;
+        document.getElementById("ticket-detail").textContent = eventName.textContent + " · " + entry.people_count + " คน";
+        document.getElementById("ticket").hidden = false;
+        var canvas = document.createElement("canvas");
+        canvas.width = 720; canvas.height = 840;
+        var ctx = canvas.getContext("2d");
+        ctx.fillStyle = "#2c1833"; ctx.fillRect(0, 0, 720, 840);
+        ctx.strokeStyle = "#f2c977"; ctx.lineWidth = 4; ctx.strokeRect(24, 24, 672, 792);
+        ctx.fillStyle = "#fff5dc"; ctx.textAlign = "center";
+        ctx.font = "600 38px sans-serif"; ctx.fillText(eventName.textContent, 360, 155, 608);
+        ctx.fillText("บัตรคิวถ่ายภาพ", 360, 242);
+        ctx.font = "700 132px sans-serif"; ctx.fillText(entry.code, 360, 437, 620);
+        ctx.font = "600 34px sans-serif"; ctx.fillText(entry.people_count + " คน", 360, 519);
+        ctx.fillText("โปรดรอฟังประกาศหรือดูเลขบนจอคิว", 360, 686, 610);
+        var save = document.getElementById("save");
+        save.href = canvas.toDataURL("image/png");
+        save.download = "photobooth-" + entry.code + ".png";
+      }
+
+      form.onsubmit = async function (event) {
+        event.preventDefault();
+        if (button.disabled) return;
+        if (!submission) submission = {
+          body: { prefix: select.value, people_count: Number(people.value) },
+          key: "ticket-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2)
+        };
+        button.disabled = select.disabled = people.disabled = true;
+        status.textContent = "กำลังออกตั๋ว…";
+        try {
+          var entry = await pbStations.request("/guest-queue", {
+            method: "POST", body: submission.body, headers: { "Idempotency-Key": submission.key }
+          });
+          submission = null;
+          ticket(entry);
+          status.textContent = "ออกคิว " + entry.code + " แล้ว";
+        } catch (error) {
+          if (error.status) submission = null;
+          status.textContent = error.status ? error.message : "ยังไม่ได้รับผล ลองส่งรายการเดิมอีกครั้ง";
+        } finally {
+          button.textContent = submission ? "ส่งรายการเดิมอีกครั้ง" : "ออกตั๋วคิว";
+          button.disabled = false;
+          select.disabled = people.disabled = Boolean(submission);
+        }
+      };
+      try {
+        if (!await pbStations.authorize("tickets")) {
+          status.textContent = "ขอ QR จุดออกตั๋วจาก Mac เครื่องหลัก";
+          return;
+        }
+        var data = await pbStations.request("/guest-queue");
+        eventName.textContent = data.round_name || "บูธถ่ายภาพ";
+        data.categories.forEach(function (category) {
+          var option = document.createElement("option");
+          option.value = category.prefix;
+          option.textContent = category.prefix + " · " + category.name;
+          select.appendChild(option);
+        });
+        status.textContent = "พร้อมออกตั๋ว";
+        form.hidden = false;
+      } catch (error) {
+        status.textContent = error.message || "เชื่อมต่อ Mac ไม่สำเร็จ";
+      }
+    });
+  </script>
+</body>
+</html>

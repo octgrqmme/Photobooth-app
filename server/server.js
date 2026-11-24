@@ -1,5 +1,4 @@
 import express from 'express';
-import cors from 'cors';
 import path from 'path';
 import fs from 'fs';
 import os from 'os';
@@ -28,8 +27,13 @@ function getLocalIpAddress() {
 
 const LOCAL_IP = getLocalIpAddress();
 
+function escapeHtml(value) {
+  return String(value).replace(/[&<>'"]/g, (character) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+  })[character]);
+}
+
 // Middleware
-app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
@@ -193,8 +197,8 @@ app.get('/share/:id', (req, res) => {
     `);
   }
 
-  const imageUrl = session.printUrl;
-  const eventTitle = session.config?.title || 'Photobooth Memory';
+  const imageUrl = escapeHtml(session.printUrl);
+  const eventTitle = escapeHtml(session.config?.title || 'Photobooth Memory');
 
   res.send(`
     <!DOCTYPE html>

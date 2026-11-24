@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>แกลเลอรีส่วนตัว</title>
+<link rel="stylesheet" href="/assets/photobooth-theme.css?v=loy-foreground-25691124" />
+  <script src="/assets/photobooth-loykrathong-scene.js?v=loy-foreground-25691124" defer></script>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: var(--pb-font-sans);
+      background: #120b06;
+      color: var(--pb-dark-ink);
+      display: grid;
+      place-items: center;
+      padding: 20px;
+    }
+    main {
+      width: min(680px, 100%);
+      background: linear-gradient(155deg, rgba(22, 16, 11, 0.76) 0%, rgba(14, 10, 7, 0.85) 100%);
+      backdrop-filter: blur(22px) saturate(160%);
+      -webkit-backdrop-filter: blur(22px) saturate(160%);
+      border: 1px solid var(--pb-dark-border);
+      border-radius: 26px;
+      padding: 26px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      text-align: center;
+      box-shadow: var(--pb-dark-shadow), var(--pb-dark-bevel);
+      animation: uiCard 0.26s var(--pb-ease-out) both;
+    }
+    h1 { margin: 0; font-size: 1.55rem; font-weight: 800; color: var(--pb-dark-ink); }
+    .meta { color: var(--pb-dark-muted); font-size: 0.9rem; }
+    .notice {
+      background: var(--pb-glass-dark-card);
+      border: 1px solid var(--pb-dark-border-subtle);
+      border-radius: 16px;
+      padding: 12px 16px;
+      color: var(--pb-dark-ink-soft);
+      font-size: 0.86rem;
+    }
+    .gallery-item {
+      background: var(--pb-glass-dark-card);
+      border: 1px solid var(--pb-dark-border-subtle);
+      border-radius: 20px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .gallery-item img { width: 100%; max-height: 68vh; object-fit: contain; border-radius: 14px; background: #090705; }
+    .actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+    a.btn, button.btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 22px;
+      border-radius: 999px;
+      border: 1px solid rgba(252, 211, 77, 0.65);
+      background: var(--pb-gold-grad);
+      color: var(--pb-light-ink);
+      font-family: inherit;
+      font-weight: 800;
+      font-size: 0.95rem;
+      text-decoration: none;
+      cursor: pointer;
+      box-shadow: var(--pb-gold-glow);
+    }
+    a.btn:hover { background: var(--pb-gold-grad-hover); }
+    button.btn.alt {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: var(--pb-dark-border-subtle);
+      color: var(--pb-dark-ink);
+      font-weight: 700;
+      box-shadow: none;
+    }
+    button.btn.alt:hover:not(:disabled) { background: rgba(255, 255, 255, 0.16); border-color: var(--pb-dark-border); }
+    .error { color: #fda4af; background: rgba(225, 29, 72, 0.14); border: 1px solid rgba(251, 113, 133, 0.4); border-radius: 16px; padding: 16px; font-weight: 600; }
+  </style>
+</head>
+<body class="pb-ambient-bg" data-lk-scene="river-ambient">
+  <main>
+    <div style="display:flex;justify-content:center;">
+      <span class="pb-eyebrow-pill">แกลเลอรีส่วนตัว</span>
+    </div>
+    <h1 id="pg-title">กำลังเปิดแกลเลอรีส่วนตัว...</h1>
+    <div id="pg-meta" class="meta"></div>
+    <div id="pg-notice" class="notice" style="display:none;"></div>
+    <div id="pg-error" class="error" style="display:none;"></div>
+    <div id="pg-items"></div>
+  </main>
+
+  <script>
+    (function () {
+      var params = new URLSearchParams(window.location.search);
+      var token = (params.get("token") || "").trim();
+      var titleEl = document.getElementById("pg-title");
+      var metaEl = document.getElementById("pg-meta");
+      var noticeEl = document.getElementById("pg-notice");
+      var errorEl = document.getElementById("pg-error");
+      var itemsEl = document.getElementById("pg-items");
+
+      function showError(msg) {
+        titleEl.textContent = "ไม่สามารถเปิดแกลเลอรีได้";
+        errorEl.textContent = msg;
+        errorEl.style.display = "block";
+      }
+
+      if (!token) {
+        showError("ลิงก์ไม่สมบูรณ์ (ไม่พบ token)");
+        return;
+      }
+
+      fetch("/api/share/personal-gallery/" + encodeURIComponent(token), { cache: "no-store" })
+        .then(function (res) {
+          return res.json().catch(function () { return {}; }).then(function (data) {
+            if (!res.ok) throw new Error(data.detail || ("HTTP " + res.status));
+            return data;
+          });
+        })
+        .then(function (data) {
+          titleEl.textContent = data.event_name || "ภาพถ่ายของคุณ";
+          var exp = data.expires_at ? new Date(data.expires_at * 1000).toLocaleString("th-TH") : "-";
+          metaEl.textContent = (data.session_code ? ("คิว/รอบ: " + data.session_code + " | ") : "") + "ลิงก์หมดอายุ: " + exp;
+          if (data.privacy_notice) {
+            noticeEl.textContent = data.privacy_notice;
+            noticeEl.style.display = "block";
+          }
+          var items = Array.isArray(data.items) ? data.items : [];
+          if (!items.length) {
+            showError("ยังไม่มีภาพถ่ายในเซสชันนี้ หรือภาพถูกลบตามนโยบายแล้ว");
+            return;
+          }
+          items.forEach(function (item) {
+            var card = document.createElement("div");
+            card.className = "gallery-item";
+            var img = document.createElement("img");
+            img.src = item.download_url;
+            img.alt = "ภาพถ่ายของคุณ";
+            card.appendChild(img);
+
+            var actions = document.createElement("div");
+            actions.className = "actions";
+            var dl = document.createElement("a");
+            dl.className = "btn";
+            dl.href = item.attachment_url;
+            dl.textContent = item.two_up ? "ดาวน์โหลดภาพ 2×6" : "ดาวน์โหลดภาพเต็ม";
+            actions.appendChild(dl);
+
+            var gifBtn = document.createElement("button");
+            gifBtn.type = "button";
+            gifBtn.className = "btn alt";
+            gifBtn.textContent = "สร้างภาพเคลื่อนไหว GIF";
+            gifBtn.onclick = function () {
+              gifBtn.disabled = true;
+              gifBtn.textContent = "กำลังสร้าง GIF...";
+              fetch("/api/share/media/" + encodeURIComponent(item.id) + "/gif", { method: "POST" })
+                .then(function (r) { return r.json(); })
+                .then(function pollGif() {
+                  return fetch("/api/share/media/" + encodeURIComponent(item.id) + "/gif", { cache: "no-store" })
+                    .then(function (r) { return r.json(); })
+                    .then(function (g) {
+                      if (g.status === "ready" && g.url) {
+                        gifBtn.textContent = "ดาวน์โหลด GIF";
+                        gifBtn.disabled = false;
+                        gifBtn.onclick = function () { window.open(g.url, "_blank", "noopener"); };
+                      } else if (g.status === "failed") {
+                        gifBtn.textContent = "สร้าง GIF ไม่สำเร็จ";
+                      } else {
+                        setTimeout(pollGif, 1200);
+                      }
+                    });
+                })
+                .catch(function () { gifBtn.textContent = "สร้าง GIF ไม่สำเร็จ"; });
+            };
+            actions.appendChild(gifBtn);
+            card.appendChild(actions);
+            itemsEl.appendChild(card);
+          });
+        })
+        .catch(function (err) {
+          showError(err.message);
+        });
+    })();
+  </script>
+</body>
+</html>

@@ -1,9 +1,9 @@
-import { exec } from 'child_process';
+import { execFile } from 'child_process';
 import { promisify } from 'util';
 import fs from 'fs';
 import path from 'path';
 
-const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
 
 export class PrinterService {
   /**
@@ -11,11 +11,11 @@ export class PrinterService {
    */
   static async getPrinters() {
     try {
-      const { stdout: defaultOutput } = await execAsync('lpstat -d').catch(() => ({ stdout: '' }));
+      const { stdout: defaultOutput } = await execFileAsync('lpstat', ['-d']).catch(() => ({ stdout: '' }));
       const defaultMatch = defaultOutput.match(/(?:system default destination|ปลายทางค่าเริ่มต้นของระบบ):\s*([^\n\r]+)/i);
       const defaultPrinter = defaultMatch ? defaultMatch[1].trim() : null;
 
-      const { stdout: printersOutput } = await execAsync('lpstat -p').catch(() => ({ stdout: '' }));
+      const { stdout: printersOutput } = await execFileAsync('lpstat', ['-p']).catch(() => ({ stdout: '' }));
       
       const printers = [];
       const lines = printersOutput.split('\n');
@@ -39,7 +39,7 @@ export class PrinterService {
 
       // If no printers parsed via -p, check -a (accepting requests)
       if (printers.length === 0) {
-        const { stdout: acceptOutput } = await execAsync('lpstat -a').catch(() => ({ stdout: '' }));
+        const { stdout: acceptOutput } = await execFileAsync('lpstat', ['-a']).catch(() => ({ stdout: '' }));
         const aLines = acceptOutput.split('\n');
         for (const line of aLines) {
           const m = line.match(/^([^\s]+)\s+accepting requests/i);
@@ -81,32 +81,32 @@ export class PrinterService {
       throw new Error(`Print file not found at path: ${filePath}`);
     }
 
-    // Build lp command
-    const args = ['lp'];
+    const safeCopies = Math.max(1, Math.min(10, Number.parseInt(copies, 10) || 1));
+    const args = [];
 
     if (printerName) {
-      args.push(`-d "${printerName}"`);
+      args.push('-d', String(printerName));
     }
 
-    if (copies > 1) {
-      args.push(`-n ${parseInt(copies, 10)}`);
+    if (safeCopies > 1) {
+      args.push('-n', String(safeCopies));
     }
 
     if (fitToPage) {
-      args.push('-o fit-to-page');
+      args.push('-o', 'fit-to-page');
     }
 
     if (paperSize) {
-      args.push(`-o media=${paperSize}`);
+      args.push('-o', `media=${String(paperSize)}`);
     }
 
-    args.push(`"${filePath}"`);
+    args.push(filePath);
 
-    const command = args.join(' ');
+    const command = ['lp', ...args].join(' ');
     console.log(`Executing print command: ${command}`);
 
     try {
-      const { stdout, stderr } = await execAsync(command);
+      const { stdout, stderr } = await execFileAsync('lp', args);
       console.log('Print output:', stdout);
       if (stderr) console.warn('Print stderr:', stderr);
 
@@ -131,8 +131,8 @@ export class PrinterService {
    */
   static async getQueue(printerName) {
     try {
-      const cmd = printerName ? `lpstat -o "${printerName}"` : 'lpstat -o';
-      const { stdout } = await execAsync(cmd).catch(() => ({ stdout: '' }));
+      const args = printerName ? ['-o', String(printerName)] : ['-o'];
+      const { stdout } = await execFileAsync('lpstat', args).catch(() => ({ stdout: '' }));
       const jobs = stdout.split('\n').filter(Boolean).map(line => {
         const parts = line.split(/\s+/);
         return {
@@ -154,7 +154,8 @@ export class PrinterService {
    */
   static async cancelJob(jobId) {
     try {
-      await execAsync(`cancel ${jobId}`);
+      if (!/^[A-Za-z0-9_.-]+$/.test(String(jobId))) throw new Error('Invalid print job id');
+      await execFileAsync('cancel', [String(jobId)]);
       return { success: true };
     } catch (error) {
       throw new Error(`Failed to cancel job: ${error.message}`);

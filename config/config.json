@@ -1,7 +1,7 @@
 {
   "common": {
     "admin_password": "0000",
-    "logging_level": "DEBUG",
+    "logging_level": "INFO",
     "users_delete_to_recycle_dir": true
   },
   "actions": {
@@ -9,7 +9,7 @@
       {
         "name": "default action",
         "jobcontrol": {
-          "countdown_capture": 2.0
+          "countdown_capture": 0.0
         },
         "processing": {
           "remove_background": false,
@@ -19,8 +19,8 @@
           "img_background_file": "userdata/demoassets/backgrounds/background.jpg",
           "image_filter": "original",
           "img_frame": {
-            "enable": false,
-            "image": "userdata/demoassets/frames/frame_image_photobooth-app.png",
+            "enable": true,
+            "image": "userdata/template.png",
             "mirror_effect": false
           },
           "texts_enable": false,
@@ -28,14 +28,14 @@
         },
         "trigger": {
           "ui_trigger": {
-            "show_button": true,
+            "show_button": false,
             "title": "Image",
             "icon": "photo_camera",
             "use_custom_color": false,
             "custom_color": "#196cb0"
           },
           "keyboard_trigger": {
-            "keycode": "i"
+            "keycode": ""
           },
           "gpio_trigger": {
             "pin": "27",
@@ -48,11 +48,11 @@
       {
         "name": "default action",
         "jobcontrol": {
-          "countdown_capture": 2.0,
-          "countdown_capture_second_following": 1.0,
+          "countdown_capture": 0.0,
+          "countdown_capture_second_following": 0.0,
           "ask_approval_each_capture": true,
-          "approve_autoconfirm_timeout": 15.0,
-          "show_individual_captures_in_gallery": true
+          "approve_autoconfirm_timeout": 0.0,
+          "show_individual_captures_in_gallery": false
         },
         "processing": {
           "capture_remove_background": false,
@@ -60,62 +60,95 @@
           "capture_fill_background_color": "white",
           "capture_img_background_enable": false,
           "capture_img_background_file": null,
-          "canvas_width": 1920,
-          "canvas_height": 1280,
+          "canvas_width": 1200,
+          "canvas_height": 1800,
           "merge_definition": [
             {
-              "description": "left",
-              "pos_x": 160,
-              "pos_y": 220,
+              "description": "Photo 1 (Left)",
+              "pos_x": 35,
+              "pos_y": 382,
               "pos_z": 0,
-              "width": 510,
-              "height": 725,
-              "rotate": 0,
-              "predefined_image": null,
-              "image_filter": "FilterPilgram2.earlybird"
-            },
-            {
-              "description": "middle predefined",
-              "pos_x": 705,
-              "pos_y": 66,
-              "pos_z": 0,
-              "width": 510,
-              "height": 725,
+              "width": 530,
+              "height": 366,
               "rotate": 0,
               "predefined_image": null,
               "image_filter": "original"
             },
             {
-              "description": "right",
-              "pos_x": 1245,
-              "pos_y": 220,
+              "description": "Photo 2 (Left)",
+              "pos_x": 35,
+              "pos_y": 782,
               "pos_z": 0,
-              "width": 510,
-              "height": 725,
+              "width": 530,
+              "height": 366,
               "rotate": 0,
               "predefined_image": null,
-              "image_filter": "FilterPilgram2.reyes"
+              "image_filter": "original"
+            },
+            {
+              "description": "Photo 3 (Left)",
+              "pos_x": 35,
+              "pos_y": 1181,
+              "pos_z": 0,
+              "width": 530,
+              "height": 366,
+              "rotate": 0,
+              "predefined_image": null,
+              "image_filter": "original"
+            },
+            {
+              "description": "Photo 1 (Right)",
+              "pos_x": 636,
+              "pos_y": 382,
+              "pos_z": 0,
+              "width": 530,
+              "height": 366,
+              "rotate": 0,
+              "predefined_image": null,
+              "image_filter": "original"
+            },
+            {
+              "description": "Photo 2 (Right)",
+              "pos_x": 636,
+              "pos_y": 782,
+              "pos_z": 0,
+              "width": 530,
+              "height": 366,
+              "rotate": 0,
+              "predefined_image": null,
+              "image_filter": "original"
+            },
+            {
+              "description": "Photo 3 (Right)",
+              "pos_x": 636,
+              "pos_y": 1181,
+              "pos_z": 0,
+              "width": 530,
+              "height": 366,
+              "rotate": 0,
+              "predefined_image": null,
+              "image_filter": "original"
             }
           ],
-          "canvas_fill_background_enable": false,
-          "canvas_fill_background_color": "#2e6f40",
+          "canvas_fill_background_enable": true,
+          "canvas_fill_background_color": "#ffffff",
           "canvas_img_background_enable": false,
           "canvas_img_background_file": null,
-          "canvas_img_front_enable": false,
-          "canvas_img_front_file": "userdata/demoassets/frames/pixabay-poster-2871536_1920.png",
+          "canvas_img_front_enable": true,
+          "canvas_img_front_file": "userdata/template_strip.png",
           "canvas_texts_enable": false,
           "canvas_texts": []
         },
         "trigger": {
           "ui_trigger": {
-            "show_button": true,
+            "show_button": false,
             "title": "Collage",
             "icon": "auto_awesome_mosaic",
             "use_custom_color": false,
             "custom_color": "#196cb0"
           },
           "keyboard_trigger": {
-            "keycode": "c"
+            "keycode": "space"
           },
           "gpio_trigger": {
             "pin": "22",
@@ -167,7 +200,7 @@
         },
         "trigger": {
           "ui_trigger": {
-            "show_button": true,
+            "show_button": false,
             "title": "Animation",
             "icon": "animated_images",
             "use_custom_color": false,
@@ -197,7 +230,7 @@
         },
         "trigger": {
           "ui_trigger": {
-            "show_button": true,
+            "show_button": false,
             "title": "Boomerang",
             "icon": "movie",
             "use_custom_color": false,
@@ -226,7 +259,7 @@
         },
         "trigger": {
           "ui_trigger": {
-            "show_button": true,
+            "show_button": false,
             "title": "Wigglegram",
             "icon": "3d",
             "use_custom_color": false,
@@ -250,8 +283,8 @@
         "name": "Printing",
         "handles_images_only": true,
         "processing": {
-          "share_command": "lp -d {printer_name} -n {copies} -o fit-to-page \"{filename}\"",
-          "printer_name": "HP_Ink_Tank_Wireless_410_series",
+          "share_command": "lp -d {printer_name} -n {copies} -o media=4x6.Fullbleed -o PageSize=4x6.Fullbleed -o sides=one-sided -o fit-to-page \"{filename}\"",
+          "printer_name": "Brother_DCP_T830DW",
           "check_if_printer_is_idle": false,
           "ask_user_for_parameter_input": false,
           "parameters_dialog_caption": "Make your choice!",
@@ -264,7 +297,7 @@
               "ui_type": "int",
               "default": "1",
               "valid_min": "1",
-              "valid_max": "3"
+              "valid_max": "10"
             }
           ],
           "share_blocked_time": 3,
@@ -273,7 +306,7 @@
         "trigger": {
           "ui_trigger": {
             "show_button": true,
-            "title": "Direct Print",
+            "title": "พิมพ์ (4x6 นิ้ว)",
             "icon": "print",
             "use_custom_color": false,
             "custom_color": "#196cb0"
@@ -288,80 +321,30 @@
         }
       },
       {
-        "name": "Printing copies",
+        "name": "AirDrop",
         "handles_images_only": true,
         "processing": {
-          "share_command": "lp -d {printer_name} -n {copies} -o fit-to-page \"{filename}\"",
-          "printer_name": "HP_Ink_Tank_Wireless_410_series",
+          "share_command": "open -a /System/Library/CoreServices/Finder.app/Contents/Applications/AirDrop.app && open -R \"{filename}\"",
+          "printer_name": "Brother_DCP_T830DW",
           "check_if_printer_is_idle": false,
-          "ask_user_for_parameter_input": true,
-          "parameters_dialog_caption": "How many copies?",
-          "parameters_dialog_action_icon": "print",
-          "parameters_dialog_action_label": "GO",
-          "parameters": [
-            {
-              "key": "copies",
-              "label": "Copies",
-              "ui_type": "int",
-              "default": "1",
-              "valid_min": "1",
-              "valid_max": "3"
-            }
-          ],
-          "share_blocked_time": 3,
+          "ask_user_for_parameter_input": false,
+          "parameters_dialog_caption": "Share via AirDrop",
+          "parameters_dialog_action_icon": "near_me",
+          "parameters_dialog_action_label": "AirDrop",
+          "parameters": [],
+          "share_blocked_time": 2,
           "max_shares": 0
         },
         "trigger": {
           "ui_trigger": {
             "show_button": true,
-            "title": "Print Copies",
-            "icon": "print",
+            "title": "แชร์ (AirDrop)",
+            "icon": "near_me",
             "use_custom_color": false,
-            "custom_color": "#196cb0"
+            "custom_color": "#0284c7"
           },
           "keyboard_trigger": {
-            "keycode": ""
-          },
-          "gpio_trigger": {
-            "pin": "",
-            "trigger_on": "pressed"
-          }
-        }
-      },
-      {
-        "name": "Mailing action",
-        "handles_images_only": false,
-        "processing": {
-          "share_command": "echo {filename} media_type={media_type} action_config_name={action_config_name} to mail {mail}",
-          "printer_name": "PDF",
-          "check_if_printer_is_idle": false,
-          "ask_user_for_parameter_input": true,
-          "parameters_dialog_caption": "E-Mail your image...",
-          "parameters_dialog_action_icon": "mail",
-          "parameters_dialog_action_label": "Send",
-          "parameters": [
-            {
-              "key": "mail",
-              "label": "E-Mail address",
-              "ui_type": "input",
-              "default": "me@mgineer85.de",
-              "valid_min": "5",
-              "valid_max": "128"
-            }
-          ],
-          "share_blocked_time": 3,
-          "max_shares": 0
-        },
-        "trigger": {
-          "ui_trigger": {
-            "show_button": true,
-            "title": "Send Mail",
-            "icon": "mail",
-            "use_custom_color": false,
-            "custom_color": "#196cb0"
-          },
-          "keyboard_trigger": {
-            "keycode": ""
+            "keycode": "a"
           },
           "gpio_trigger": {
             "pin": "",
@@ -385,30 +368,30 @@
     "PRIMARY_COLOR": "#06b6d4",
     "SECONDARY_COLOR": "#3b82f6",
     "theme": "dark",
-    "show_gallery_on_frontpage": true,
-    "show_admin_on_frontpage": true,
+    "show_gallery_on_frontpage": false,
+    "show_admin_on_frontpage": false,
     "admin_button_invisible": true,
     "show_frontpage_timeout": 5,
-    "enable_automatic_slideshow": true,
+    "enable_automatic_slideshow": false,
     "show_automatic_slideshow_timeout": 300,
     "enable_livestream_when_idle": true,
     "enable_livestream_when_active": true,
-    "livestream_mirror_effect": true,
+    "livestream_mirror_effect": false,
     "livestream_blurredbackground": true,
     "livestream_blurredbackground_high_framerate": false,
     "livestream_frameoverlay": {
       "enable": false,
-      "image": "userdata/demoassets/frames/frame_image_photobooth-app.png",
-      "mirror_effect": true
+      "image": "userdata/template.png",
+      "mirror_effect": false
     },
-    "FRONTPAGE_TEXT": "<div class=\"photobooth-hero\"><span class=\"badge\">📸 PHOTOBOOTH STUDIO</span><h2>แตะปุ่มด้านล่างเพื่อถ่ายรูป</h2><p>Smile & Have Fun!</p></div>",
+    "FRONTPAGE_TEXT": "",
     "TAKEPIC_MSG_TIME": 0.5,
-    "TAKEPIC_MSG_TEXT": "😃",
-    "AUTOCLOSE_NEW_ITEM_ARRIVED": 30,
-    "GALLERY_EMPTY_MSG": "<div class=\"fixed-center text-h2 text-weight-bold text-center text-white\" style=\"text-shadow: 4px 4px 4px #666;\">Empty, Zero, Nada! 🤷‍♂️<br>Let's take some pictures! <br>📷💕</div>",
+    "TAKEPIC_MSG_TEXT": "\ud83d\ude03",
+    "AUTOCLOSE_NEW_ITEM_ARRIVED": 45,
+    "GALLERY_EMPTY_MSG": "",
     "gallery_show_qrcode": true,
-    "qrcode_text_above": "📱 สแกน QR Code เพื่อรับรูปเข้ามือถือ",
-    "qrcode_text_below": "เชื่อมต่อ Wi-Fi แล้วใช้กล้องมือถือสแกนได้ทันที",
+    "qrcode_text_above": "\ud83d\udcf1 \u0e2a\u0e41\u0e01\u0e19 QR Code \u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e23\u0e31\u0e1a\u0e23\u0e39\u0e1b\u0e40\u0e02\u0e49\u0e32\u0e21\u0e37\u0e2d\u0e16\u0e37\u0e2d",
+    "qrcode_text_below": "\u0e40\u0e0a\u0e37\u0e48\u0e2d\u0e21\u0e15\u0e48\u0e2d Wi-Fi \u0e41\u0e25\u0e49\u0e27\u0e43\u0e0a\u0e49\u0e01\u0e25\u0e49\u0e2d\u0e07\u0e21\u0e37\u0e2d\u0e16\u0e37\u0e2d\u0e2a\u0e41\u0e01\u0e19\u0e44\u0e14\u0e49\u0e17\u0e31\u0e19\u0e17\u0e35",
     "qrcode_link_codes": false,
     "gallery_show_filter": true,
     "gallery_show_download": true,
@@ -426,25 +409,22 @@
     "group_backends": [
       {
         "enabled": true,
-        "description": "MacBook Built-in Camera",
+        "description": "Canon USB (gphoto2)",
         "backend_config": {
-          "orientation": "1: 0°",
-          "camera_standby_when_inactive": true,
+          "orientation": "1: 0\u00b0",
+          "camera_standby_when_inactive": false,
           "camera_standby_when_inactive_time": 30,
-          "backend_type": "WebcamPyav",
-          "device_identifier": "0",
-          "pixel_format": "nv12",
-          "cam_resolution_width": 1280,
-          "cam_resolution_height": 720,
-          "cam_framerate": 30,
-          "preview_resolution_reduce_factor": 2,
-          "frame_skip_count": 3
+          "backend_type": "Gphoto2",
+          "parameterset_device_init": [],
+          "parameterset_video": [],
+          "parameterset_still": [],
+          "parameterset_standby": []
         }
       }
     ]
   },
   "hardwareinputoutput": {
-    "keyboard_input_enabled": false,
+    "keyboard_input_enabled": true,
     "gpio_enabled": false,
     "gpio_pin_shutdown": 17,
     "gpio_pin_reboot": 18,
@@ -453,7 +433,7 @@
     "gpio_pin_job_abort": 20
   },
   "misc": {
-    "secret": "075fe918f335a1f06fd5b0a0224ca877",
+    "secret": "9218a5f0edf311a56671c9393badadae33dc5bc9e6409f6f2074418f2fd326b4",
     "cmd_shutdown": "shutdown now",
     "cmd_reboot": "reboot"
   }
